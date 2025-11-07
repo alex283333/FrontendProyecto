@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Panel Admin</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+
+        :root{--bg:#0f1724;--card:#0b1220;--accent:#e50914;--muted:#9aa4b2;--glass:rgba(255,255,255,0.02)}
+        html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:linear-gradient(180deg,#071029 0%,#0b1220 100%);color:#e6eef8}
+
+        body.not-verified *:not(.pre-verify){visibility:hidden}
+        .pre-verify{visibility:visible}
+
+        .app{display:flex;min-height:100vh}
+        .sidebar{width:260px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:24px;border-right:1px solid rgba(255,255,255,0.03)}
+        .brand{font-weight:700;font-size:18px;margin-bottom:20px}
+        .nav{display:flex;flex-direction:column;gap:8px}
+        .nav button{background:transparent;border:0;color:var(--muted);text-align:left;padding:10px;border-radius:8px;cursor:pointer}
+        .nav button.active{color:#fff;background:rgba(255,255,255,0.03)}
+
+        .main{flex:1;padding:24px}
+        .header{display:flex;justify-content:space-between;align-items:center;gap:16px}
+        .hdr-left{display:flex;gap:12px;align-items:center}
+        .hdr-actions{display:flex;gap:8px}
+        .btn{background:var(--accent);border:0;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer}
+        .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+        .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+        .card{background:var(--card);padding:16px;border-radius:10px;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+        .table{margin-top:16px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);border-radius:8px;overflow:hidden}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:10px;border-bottom:1px solid rgba(255,255,255,0.02);text-align:left;font-size:14px}
+
+        .search{display:flex;gap:8px}
+        input[type=search]{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:#fff}
+
+        .skeleton{height:12px;background:linear-gradient(90deg,#101827,#0f2035,#101827);border-radius:6px}
+
+        @media(max-width:900px){.sidebar{display:none}.grid{grid-template-columns:repeat(1,1fr)}}
+    </style>
+
+    <!-- Immediate token check to avoid any FOUC or content leak. If no adminToken (or fallback jwt), redirect instantly. -->
+    <script>
+        (function(){
+            try{
+
+                var _adminToken = localStorage.getItem('adminToken') || localStorage.getItem('jwt');
+                if(!_adminToken){
+
+                    location.replace('403.shtml');
+                    return;
+                }
+
+                document.documentElement.classList.add('js');
+                document.addEventListener('DOMContentLoaded', function(){
+
+                    document.body.classList.add('not-verified');
+                });
+            }catch(e){
+
+                try{ location.replace('403.shtml'); }catch(_){ location.href='403.shtml'; }
+            }
+        })();
+    </script>
+</head>
+
+<body class="pre-verify">
+    <!-- Visible while token existence is being checked synchronously -->
+    <div id="pre-verify-screen" style="display:flex;align-items:center;justify-content:center;height:100vh;color:var(--muted)">
+        <div style="text-align:center">
+            <div style="font-size:28px;font-weight:700;margin-bottom:6px">Verificando sesión de administrador...</div>
+            <div style="max-width:420px;margin:0 auto">Si tienes problemas, asegúrate de cerrar sesión y entrar nuevamente.</div>
+        </div>
+    </div>
+
+    <div id="app" class="app" aria-hidden="true">
+        <aside class="sidebar">
+            <div class="brand">UltraFilm — Admin</div>
+            <nav class="nav">
+                <button id="nav-dashboard" class="active">Dashboard</button>
+                <button id="nav-users">Usuarios</button>
+                <button id="nav-logs">Logs</button>
+            </nav>
+            <div style="margin-top:20px;font-size:13px;color:var(--muted)">Token: <span id="token-state">—</span></div>
+        </aside>
+
+        <main class="main">
+            <div class="header">
+                <div class="hdr-left">
+                    <h2 style="margin:0">Panel de administración</h2>
+                    <div style="color:var(--muted);font-size:14px">Área segura</div>
+                </div>
+                <div class="hdr-actions">
+                    <button id="refresh-btn" class="btn secondary">Refrescar</button>
+                    <button id="maintenance-btn" class="btn secondary" title="Activar / desactivar modo mantenimiento">Modo mantenimiento: <span id="maintenance-state">OFF</span></button>
+                    <button id="logout-btn" class="btn">Cerrar sesión</button>
+                </div>
+            </div>
+
+            <section id="dashboard" class="view">
+                <div class="grid">
+                    <div class="card">
+                        <div style="color:var(--muted);font-size:13px">Usuarios registrados</div>
+                        <div id="stat-users" style="font-size:22px;font-weight:700;padding-top:8px">—</div>
+                    </div>
+                    <div class="card">
+                        <div style="color:var(--muted);font-size:13px">Sesiones activas</div>
+                        <div id="stat-sessions" style="font-size:22px;font-weight:700;padding-top:8px">—</div>
+                    </div>
+                    <div class="card">
+                        <div style="color:var(--muted);font-size:13px">Nuevos hoy</div>
+                        <div id="stat-new" style="font-size:22px;font-weight:700;padding-top:8px">—</div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:20px">
+                    <div style="display:flex;justify-content:space-between;align-items:center">
+                        <div style="font-weight:700">Actividad reciente</div>
+                        <div style="color:var(--muted);font-size:13px">Últimas 24 horas</div>
+                    </div>
+                    <div id="recent-activity" style="margin-top:12px">
+                        <table id="activity-table" style="width:100%;border-collapse:collapse">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left;padding:8px;color:var(--muted);font-size:13px">Admin</th>
+                                    <th style="text-align:left;padding:8px;color:var(--muted);font-size:13px">Acción</th>
+                                    <th style="text-align:left;padding:8px;color:var(--muted);font-size:13px">Objetivo</th>
+                                    <th style="text-align:left;padding:8px;color:var(--muted);font-size:13px">Hora</th>
+                                </tr>
+                            </thead>
+                            <tbody id="activity-tbody">
+                                <tr><td colspan="4" style="padding:12px;color:var(--muted)">Cargando actividad...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section id="users" class="view" hidden>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <div style="font-weight:700">Usuarios</div>
+                    <div class="search">
+                        <input id="user-search" type="search" placeholder="Buscar por nombre o email" aria-label="Buscar usuarios">
+                        <button id="user-refresh" class="btn secondary">Buscar</button>
+                    </div>
+                </div>
+
+                <div class="table">
+                    <table aria-live="polite">
+                        <thead><tr><th>Id</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Acciones</th></tr></thead>
+                        <tbody id="users-tbody">
+                            <tr><td colspan="5" style="padding:16px;color:var(--muted)">Cargando usuarios...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="logs" class="view" hidden>
+                <div style="font-weight:700">Logs del sistema</div>
+                <div class="card" style="margin-top:12px">
+                    <div id="logs-list">Cargando logs...</div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <div id="toast" aria-live="polite" style="position:fixed;right:18px;bottom:18px"></div>
+
+    <script>
+        (function(){
+            const API_BASE = 'https://api.ultrafilm.online';
+            let adminToken = localStorage.getItem('adminToken');
+            const elApp = document.getElementById('app');
+            const tokenState = document.getElementById('token-state');
+
+            function toast(msg, type='info'){
+                const t = document.createElement('div');
+                t.textContent = msg; t.style.background = type==='error'? '#7b1111':'#1b2638';
+                t.style.color = '#fff'; t.style.padding='10px 14px'; t.style.borderRadius='8px'; t.style.marginTop='8px';
+                document.getElementById('toast').appendChild(t);
+                setTimeout(()=>t.remove(),4500);
+            }
+
+            function fetchWithTimeout(resource, options = {}, timeout = 5000) {
+                const controller = new AbortController();
+                const id = setTimeout(() => controller.abort(), timeout);
+                const opts = Object.assign({}, options, { signal: controller.signal });
+                return fetch(resource, opts).finally(() => clearTimeout(id));
+            }
+
+            async function verifyToken(){
+                try{
+
+                    adminToken = localStorage.getItem('adminToken') || localStorage.getItem('jwt');
+                    if(!adminToken) return null;
+
+                    const res = await fetchWithTimeout(API_BASE + '/verify-admin', { headers: { 'Authorization': 'Bearer ' + adminToken } }, 5000);
+                    if(!res || !res.ok) return null;
+                    const js = await res.json();
+                    return js;
+                }catch(e){
+
+                    return null;
+                }
+            }
+
+            async function loadInitial(){
+                const ok = await verifyToken();
+                if(!ok || !ok.isAdmin){
+                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('jwt');
+                    localStorage.removeItem('loggedInUser');
+                    location.href='403.shtml';
+                    return;
+                }
+
+                document.body.classList.remove('not-verified');
+
+                document.body.classList.remove('pre-verify');
+
+                try{ const pv = document.getElementById('pre-verify-screen'); if(pv) pv.remove(); }catch(e){}
+                elApp.setAttribute('aria-hidden','false');
+                adminToken = localStorage.getItem('adminToken');
+                tokenState.textContent = adminToken ? 'OK' : '—';
+
+                fetchStats();
+                fetchUsers();
+                fetchLogs();
+                fetchActivity();
+            }
+
+            async function fetchStats(){
+                const statUsers = document.getElementById('stat-users');
+                const statSessions = document.getElementById('stat-sessions');
+                const statNew = document.getElementById('stat-new');
+                try{
+                    const res = await fetch(API_BASE+'/admin/stats',{headers:{'Authorization':'Bearer '+adminToken}});
+                    if(!res.ok) throw new Error('no-stats');
+                    const d = await res.json();
+                    statUsers.textContent = d.totalUsers ?? '—';
+                    statSessions.textContent = d.activeSessions ?? '—';
+                    statNew.textContent = d.newToday ?? '—';
+                }catch(e){
+
+                    statUsers.textContent = '—'; statSessions.textContent='—'; statNew.textContent='—';
+                }
+            }
+
+            async function fetchUsers(q=''){ 
+                const tbody = document.getElementById('users-tbody');
+                tbody.innerHTML = '<tr><td colspan="5" style="padding:16px;color:var(--muted)">Cargando usuarios...</td></tr>';
+                try{
+                    const res = await fetch(API_BASE+'/admin/users?search='+encodeURIComponent(q),{headers:{'Authorization':'Bearer '+adminToken}});
+                    if(!res.ok) throw new Error('no-users');
+                    const data = await res.json();
+                    if(!Array.isArray(data)) data=[];
+                    if(data.length===0){ tbody.innerHTML='<tr><td colspan="5" style="padding:16px;color:var(--muted)">No se encontraron usuarios.</td></tr>'; return; }
+                    tbody.innerHTML = data.map(u=>`<tr><td>${u.id}</td><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td>${u.role||'user'}</td><td><button class="btn small" data-id="${u.id}" data-action="toggle-role">Toggle role</button> <button class="btn secondary small" data-id="${u.id}" data-action="reset-password">Reset password</button> <button class="btn secondary small" data-id="${u.id}" data-action="ban">Ban</button></td></tr>`).join('');
+
+                    tbody.querySelectorAll('button').forEach(b=>b.addEventListener('click', onUserAction));
+                }catch(e){
+                    tbody.innerHTML = '<tr><td colspan="5" style="padding:16px;color:var(--muted)">Error cargando usuarios.</td></tr>';
+                }
+            }
+
+            async function onUserAction(ev){
+                const id = ev.currentTarget.dataset.id;
+                const action = ev.currentTarget.dataset.action;
+                if(action==='toggle-role'){
+                    try{
+                        const res = await fetch(API_BASE+`/admin/users/${id}/toggle-role`,{method:'POST',headers:{'Authorization':'Bearer '+adminToken}});
+                        if(!res.ok) throw new Error('error');
+                        toast('Rol actualizado'); fetchUsers(document.getElementById('user-search').value);
+                    }catch(e){toast('No se pudo cambiar rol','error')}
+                } else if(action==='reset-password'){
+                    if(!confirm('¿Confirmar reset de contraseña para este usuario? Se le enviará un email con la nueva contraseña.')) return;
+                    try{
+                        const res = await fetch(API_BASE+`/admin/users/${id}/reset-password`,{method:'POST',headers:{'Authorization':'Bearer '+adminToken}});
+                        if(!res.ok) throw new Error('error');
+                        toast('Contraseña restablecida y email enviado');
+                        fetchUsers(document.getElementById('user-search').value);
+                    }catch(e){toast('No se pudo restablecer la contraseña','error')}
+                } else if(action==='ban'){
+                    if(!confirm('¿Confirmar ban a este usuario?')) return;
+                    try{const res=await fetch(API_BASE+`/admin/users/${id}/ban`,{method:'POST',headers:{'Authorization':'Bearer '+adminToken}}); if(!res.ok) throw new Error(); toast('Usuario baneado'); fetchUsers(document.getElementById('user-search').value);}catch(e){toast('No se pudo banear','error')}
+                }
+            }
+
+            async function fetchLogs(){
+                const el = document.getElementById('logs-list');
+                el.textContent='Cargando logs...';
+                try{
+                    const res = await fetch(API_BASE+'/admin/logs',{headers:{'Authorization':'Bearer '+adminToken}});
+                    if(!res.ok) throw new Error('no-logs');
+                    const d = await res.json();
+                    el.innerHTML = '<ul style="list-style:none;padding-left:0;margin:0">'+(d.slice(0,20).map(l=>`<li style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.02)"><strong>${escapeHtml(l.level)}</strong> ${escapeHtml(l.msg)} <span style="color:var(--muted);font-size:12px">${escapeHtml(l.ts)}</span></li>`).join(''))+'</ul>';
+                }catch(e){ el.textContent='No se pudieron cargar logs.' }
+            }
+
+            async function fetchActivity(){
+                const tbody = document.getElementById('activity-tbody');
+                if(!tbody) return;
+                tbody.innerHTML = '<tr><td colspan="4" style="padding:12px;color:var(--muted)">Cargando actividad...</td></tr>';
+                try{
+
+                    const token = localStorage.getItem('adminToken') || localStorage.getItem('jwt');
+                    if(!token){ tbody.innerHTML = '<tr><td colspan="4" style="padding:12px;color:var(--muted)">No hay token de administrador en localStorage.</td></tr>'; return; }
+
+                    const res = await fetch(API_BASE + '/admin/activity', { headers: { 'Authorization': 'Bearer ' + token } });
+                    if(!res.ok){
+                        const text = await res.text().catch(()=>res.statusText||'');
+                        tbody.innerHTML = `<tr><td colspan="4" style="padding:12px;color:#ffb0b0">Error cargando actividad: ${res.status} ${escapeHtml(text)}</td></tr>`;
+                        console.error('fetchActivity failed', res.status, text);
+                        return;
+                    }
+
+                    const data = await res.json();
+                    if(!Array.isArray(data) || data.length===0){ tbody.innerHTML = '<tr><td colspan="4" style="padding:12px;color:var(--muted)">Actualmente está vacío.</td></tr>'; return; }
+
+                    const now = Date.now();
+                    const dayAgo = now - 24*60*60*1000;
+                    const recent = data.filter(it => {
+                        if(!it.ts) return false;
+                        const t = new Date(it.ts);
+                        return !isNaN(t) && t.getTime() >= dayAgo;
+                    }).slice(0,8);
+
+                    const toShow = recent.length ? recent : data.slice(0,6);
+                    tbody.innerHTML = toShow.map(it => {
+                        const ts = it.ts ? escapeHtml(timeAgo(new Date(it.ts))) : '';
+                        const adminLabel = it.admin && (it.admin.username || it.admin.email) ? escapeHtml(it.admin.username || it.admin.email) + (it.admin.role? ' ('+escapeHtml(it.admin.role)+')':'') : '';
+                        const targetLabel = it.target && (it.target.username || it.target.email) ? escapeHtml(it.target.username || it.target.email) : '';
+
+                        const actionLabel = escapeHtml(it.message || it.action || '');
+                        return `<tr style="border-bottom:1px solid rgba(255,255,255,0.02)"><td style="padding:8px">${adminLabel}</td><td style="padding:8px">${actionLabel}</td><td style="padding:8px">${targetLabel}</td><td style="padding:8px;color:var(--muted);font-size:13px">${ts}</td></tr>`;
+                    }).join('');
+
+                }catch(e){
+                    console.error('fetchActivity error', e);
+                    tbody.innerHTML = `<tr><td colspan="4" style="padding:12px;color:#ffb0b0">Error cargando actividad: ${escapeHtml(String(e.message||e))}</td></tr>`;
+                }
+            }
+
+            function parseLogTimestamp(raw){
+                if(!raw) return null;
+
+                const isoMatch = raw.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
+                if(isoMatch){ const d = new Date(raw); if(!isNaN(d)) return d; }
+
+                const apache = raw.match(/(\d{1,2})\/(\w{3})\/(\d{4}):(\d{2}:\d{2}:\d{2})/);
+                if(apache){
+                    const day = apache[1]; const mon = apache[2]; const yr = apache[3]; const time = apache[4];
+                    const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+                    const mm = months[mon] ?? 0;
+                    const parts = time.split(':');
+                    const dt = new Date(Date.UTC(parseInt(yr), mm, parseInt(day), parseInt(parts[0]), parseInt(parts[1]), parseInt(parts[2])));
+                    if(!isNaN(dt)) return dt;
+                }
+
+                const anyIso = raw.match(/\d{4}-\d{2}-\d{2} [\d:.]{8,}/);
+                if(anyIso){ const d = new Date(anyIso[0].replace(' ','T')); if(!isNaN(d)) return d; }
+
+                return null;
+            }
+
+            function timeAgo(input){
+                if(!input) return '';
+                const d = (input instanceof Date) ? input : new Date(input);
+                if(isNaN(d)) return '';
+                const now = Date.now();
+                const diffSeconds = Math.round((d.getTime() - now) / 1000); 
+
+                const abs = Math.abs(diffSeconds);
+
+                const THIRTY_DAYS = 30 * 24 * 60 * 60;
+                if(abs > THIRTY_DAYS){
+                    try{
+                        return d.toLocaleString('es-ES', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    }catch(e){
+                        return d.toISOString().replace('T',' ').split('.')[0];
+                    }
+                }
+
+                const rtf = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
+
+                const sign = Math.sign(diffSeconds); 
+
+                if(abs < 60) return rtf.format(sign * Math.round(abs), 'second');
+                if(abs < 3600) return rtf.format(sign * Math.round(abs/60), 'minute');
+                if(abs < 86400) return rtf.format(sign * Math.round(abs/3600), 'hour');
+                if(abs < 604800) return rtf.format(sign * Math.round(abs/86400), 'day');
+                if(abs < 2592000) return rtf.format(sign * Math.round(abs/604800), 'week');
+                return rtf.format(sign * Math.round(abs/2592000), 'month');
+            }
+
+            function populateRecentActivity(logs){
+                const el = document.getElementById('recent-activity');
+                if(!Array.isArray(logs) || logs.length===0){ el.innerHTML = '<div style="color:var(--muted)">Actualmente está vacío.</div>'; return; }
+                const now = Date.now();
+                const dayAgo = now - 24*60*60*1000;
+
+                const mapped = logs.map(item=>{
+                    const ts = item.ts || item.time || item.timestamp || '';
+                    const parsed = parseLogTimestamp(ts) || parseLogTimestamp(item.msg) || null;
+                    return { raw: item, parsedDate: parsed };
+                });
+
+                const recent = mapped.filter(m => m.parsedDate && m.parsedDate.getTime() >= dayAgo)
+                                     .slice(0,8);
+
+                if(recent.length>0){
+                    el.innerHTML = recent.map(r=>{
+                        const level = escapeHtml(r.raw.level||'info');
+                        const msg = escapeHtml(r.raw.msg||r.raw.line||'');
+                        const ts = escapeHtml(r.parsedDate.toISOString().replace('T',' ').split('.')[0]);
+                        return `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.02)"><div style="font-size:13px;color:var(--muted)">${ts} · ${level}</div><div style="margin-top:4px">${msg}</div></div>`;
+                    }).join('');
+                    return;
+                }
+
+                const fallback = logs.slice(0,6);
+                if(fallback.length===0){ el.innerHTML = '<div style="color:var(--muted)">Actualmente está vacío.</div>'; return; }
+                el.innerHTML = fallback.map(l=>{
+                    const level = escapeHtml(l.level||'info');
+                    const msg = escapeHtml(l.msg||l.line||'');
+                    const ts = escapeHtml(l.ts||'');
+                    return `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.02)"><div style="font-size:13px;color:var(--muted)">${ts?ts+' · '+level:level}</div><div style="margin-top:4px">${msg}</div></div>`;
+                }).join('');
+            }
+
+            function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]); }
+
+            document.getElementById('nav-dashboard').addEventListener('click', ()=>switchView('dashboard'));
+            document.getElementById('nav-users').addEventListener('click', ()=>switchView('users'));
+            document.getElementById('nav-logs').addEventListener('click', ()=>switchView('logs'));
+            document.getElementById('refresh-btn').addEventListener('click', ()=>{ fetchStats(); fetchUsers(document.getElementById('user-search').value); fetchLogs(); fetchActivity(); toast('Refrescado') });
+
+            document.getElementById('user-refresh').addEventListener('click', ()=>fetchUsers(document.getElementById('user-search').value));
+
+            document.getElementById('logout-btn').addEventListener('click', async ()=>{
+                try{ await fetch(API_BASE+'/logout',{method:'POST',headers:{'Authorization':'Bearer '+adminToken}}); }catch(e){}
+                localStorage.removeItem('adminToken'); localStorage.removeItem('jwt'); localStorage.removeItem('loggedInUser');
+                location.href='index.html';
+            });
+
+            function switchView(id){ document.querySelectorAll('.view').forEach(v=>v.hidden=true); document.getElementById(id).hidden=false; document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active')); document.getElementById('nav-'+id).classList.add('active'); }
+
+            setInterval(async ()=>{
+                const ok = await verifyToken(); if(!ok || !ok.isAdmin){ localStorage.removeItem('adminToken'); localStorage.removeItem('jwt'); localStorage.removeItem('loggedInUser'); location.href='403.shtml'; }
+            },30000);
+
+            loadInitial();
+
+            async function fetchMaintenanceStatus(){
+                try{
+                    const token = localStorage.getItem('adminToken') || localStorage.getItem('jwt');
+                    if(!token) return;
+                    const res = await fetch(API_BASE + '/maintenance', { headers: { 'Authorization': 'Bearer ' + token } });
+                    if(!res.ok) return; const js = await res.json();
+                    const el = document.getElementById('maintenance-state');
+                    if(!el) return;
+                    el.textContent = js && js.active ? 'ON' : 'OFF';
+                    document.getElementById('maintenance-btn').style.background = js && js.active ? '#7b1111' : '';
+                }catch(e){ console.warn('fetchMaintenanceStatus error', e); }
+            }
+
+            async function toggleMaintenance(){
+                try{
+                    const token = localStorage.getItem('adminToken') || localStorage.getItem('jwt');
+                    if(!token) { toast('No hay token de administrador','error'); return; }
+                    const el = document.getElementById('maintenance-state');
+                    const currentlyOn = el && el.textContent === 'ON';
+                    if(!confirm((currentlyOn? 'Desactivar' : 'Activar') + ' modo mantenimiento?')) return;
+                    const res = await fetch(API_BASE + '/maintenance', { method: 'POST', headers: { 'Authorization':'Bearer '+token, 'Content-Type':'application/json' }, body: JSON.stringify({ active: !currentlyOn, message: ( !currentlyOn ? 'Mantenimiento programado por administración' : '' ) }) });
+                    if(!res.ok){ const txt = await res.text().catch(()=>res.statusText||''); toast('Error al cambiar modo mantenimiento: '+txt,'error'); return; }
+                    toast('Modo mantenimiento actualizado');
+                    await fetchMaintenanceStatus();
+                }catch(e){ console.error(e); toast('Error al cambiar modo mantenimiento','error'); }
+            }
+
+            document.getElementById('maintenance-btn').addEventListener('click', toggleMaintenance);
+
+            fetchMaintenanceStatus();
+            setInterval(fetchMaintenanceStatus, 30000);
+
+            window._adminDebug = {fetchUsers,fetchStats,fetchLogs,fetchActivity};
+        })();
+    </script>
+</body>
+</html>

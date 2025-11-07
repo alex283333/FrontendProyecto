@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Verificando correo — UltraFilm</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#f7f7f7;color:#222;margin:0;padding:0}
+    .wrap{max-width:720px;margin:48px auto;background:#fff;padding:24px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+    .ok{color:green}
+    .err{color:#c00}
+    .btn{display:inline-block;padding:10px 14px;background:#007bff;color:#fff;text-decoration:none;border-radius:5px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Verificando tu correo</h1>
+    <p id="status">Espere mientras verificamos tu cuenta...</p>
+    <div id="actions" style="margin-top:18px"></div>
+  </div>
+
+  <script>
+
+    function getToken(){
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('token')) return params.get('token');
+
+      const parts = window.location.pathname.replace(/\/$/, '').split('/');
+      const last = parts[parts.length-1] || '';
+      if (/^[0-9a-f]{64}$/i.test(last)) return last;
+      return null;
+    }
+
+    async function run(){
+      const statusEl = document.getElementById('status');
+      const actions = document.getElementById('actions');
+      const token = getToken();
+      if (!token){
+        statusEl.innerHTML = '<span class="err">Token no encontrado en la URL.</span>';
+        actions.innerHTML = '<a class="btn" href="/login.html">Ir al login</a>';
+        return;
+      }
+
+      try{
+
+        const API_BASE_URL = 'https://api.ultrafilm.online';
+        const apiUrl = `${API_BASE_URL}/verify/${encodeURIComponent(token)}`;
+        console.log('Intentando verificar con URL:', apiUrl); 
+
+        const res = await fetch(apiUrl, { 
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        const data = await res.json();
+
+        if (res.ok && data.verified === true) {
+          statusEl.innerHTML = '<span class="ok">¡Tu correo ha sido verificado correctamente!</span>';
+          setTimeout(() => {
+            window.location.href = '/login.html?verified=1';
+          }, 2000);
+          return;
+        }
+
+        window.location.href = '/login.html';
+      }catch(e){
+
+        window.location.href = '/login.html';
+      }
+    }
+
+    function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"})[c]); }
+
+    run();
+  </script>
+</body>
+</html>
+

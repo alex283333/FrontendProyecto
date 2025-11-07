@@ -1,0 +1,72 @@
+<!doctype html>
+
+<html lang="es">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>Sitio en mantenimiento — UltraFilm</title>
+
+  <link rel="stylesheet" href="/style.css">
+
+  <style>
+
+    body{display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:linear-gradient(180deg,#071029,#0b1220);color:#fff;font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+
+    .card{max-width:720px;padding:28px;border-radius:12px;background:rgba(0,0,0,0.45);box-shadow:0 8px 30px rgba(0,0,0,0.6);text-align:center}
+
+    h1{margin:0 0 8px;font-size:28px;color:#e50914}
+
+    p{color:#cbd5e1}
+
+    .actions{margin-top:18px}
+
+    a.button{display:inline-block;padding:10px 16px;border-radius:8px;background:#e50914;color:#fff;text-decoration:none}
+
+    a.alt{margin-left:8px;color:#9aa4b2}
+
+  </style>
+
+</head>
+
+<body>
+
+  <div class="card">
+
+    <h1>Estamos en mantenimiento</h1>
+
+    <p>Lo sentimos — estamos realizando tareas de mantenimiento y mejorando el sitio. Volveremos en breve.</p>
+
+    <p id="maint-message" style="color:#9aa4b2;margin-top:8px"></p>
+
+    <div class="actions">
+
+      <a class="button" href="/">Ir al inicio</a>
+
+      <a class="alt" href="/login.html">Iniciar sesión (si eres admin)</a>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    try{
+
+      const params = new URLSearchParams(location.search);
+
+      const msg = params.get('message');
+
+      if(msg){ document.getElementById('maint-message').textContent = msg; }
+
+    }catch(e){}
+
+  </script>
+
+</body>
+
+</html>
+

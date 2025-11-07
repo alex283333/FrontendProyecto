@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Ver más tarde - UltraFilm</title>
+
+    <link rel="manifest" href="manifest.json">
+
+    <meta name="theme-color" content="#121212">
+
+    <script>
+
+        (function() {
+          const originalFetch = window.fetch;
+          window.fetch = function(...args) {
+            const url = args[0];
+            let urlString = typeof url === 'string' ? url : (url && url.url ? url.url : (url && url.toString ? url.toString() : ''));
+            if (urlString.includes('api.themoviedb.org') || urlString.includes('api_key=')) {
+              console.error('❌ BLOQUEADO (HEAD): api.themoviedb.org');
+              throw new Error('Llamadas directas a api.themoviedb.org bloqueadas');
+            }
+            if (urlString.includes('ultrafilm.online/tmdb') && !urlString.includes('api.ultrafilm.online')) {
+              console.error('❌ BLOQUEADO (HEAD): ultrafilm.online/tmdb');
+              throw new Error('URL incorrecta. Usa api.ultrafilm.online/tmdb');
+            }
+            return originalFetch.apply(this, args);
+          };
+        })();
+
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('sw.js');
+          });
+        }
+    </script>
+
+    <style>
+
+        body {
+
+            margin: 0;
+
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+            background-color: #121212;
+
+            color: #eee;
+
+            display: flex;
+
+            flex-direction: column;
+
+            min-height: 100vh;
+
+        }
+
+        header {
+
+            background-color: #1c1c1c;
+
+            padding: 15px 20px;
+
+            text-align: center;
+
+            font-size: 1.8rem;
+
+            font-weight: bold;
+
+            color: #e50914;
+
+            letter-spacing: 1px;
+
+        }
+
+        nav {
+
+            background-color: #222;
+
+            padding: 10px 20px;
+
+            display: flex;
+
+            justify-content: center;
+
+            flex-wrap: wrap;
+
+            gap: 15px;
+
+        }
+
+        nav a {
+
+            color: #eee;
+
+            text-decoration: none;
+
+            font-weight: bold;
+
+            padding: 8px 15px;
+
+            border-radius: 5px;
+
+            background-color: #333;
+
+            transition: background-color 0.3s ease;
+
+        }
+
+        nav a:hover {
+
+            background-color: #e50914;
+
+        }
+
+        nav a[href="guardados.html"]:hover {
+
+            background-color: #e50914 !important;
+
+            color: #fff !important;
+
+        }
+
+        nav a[href="favoritos.html"]:hover {
+
+            background-color: #e50914 !important;
+
+            color: #fff !important;
+
+        }
+
+        .btn-logout {
+
+            background: linear-gradient(90deg, #e50914 60%, #b20710 100%);
+
+            color: #fff;
+
+            border-radius: 6px;
+
+            padding: 10px 22px;
+
+            font-size: 1rem;
+
+            font-weight: bold;
+
+            margin: 0 0 0 10px;
+
+            box-shadow: 0 2px 8px rgba(229, 9, 20, 0.10);
+
+            transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+
+            display: inline-block;
+
+            border: none;
+
+            outline: none;
+
+            cursor: pointer;
+
+            letter-spacing: 0.5px;
+
+        }
+
+        .btn-logout:hover {
+
+            background: linear-gradient(90deg, #b20710 60%, #e50914 100%);
+
+            box-shadow: 0 4px 16px rgba(229, 9, 20, 0.18);
+
+            transform: translateY(-1px) scale(1.04);
+
+        }
+
+        main {
+
+            flex-grow: 1;
+
+            max-width: 1200px;
+
+            margin: 20px auto;
+
+            padding: 0 15px 40px;
+
+        }
+
+        #guardados-container { display:grid; grid-template-columns: repeat(6, 1fr); gap:20px; }
+
+        .card { background:#1e1e1e; border-radius:10px; overflow:hidden; display:flex; flex-direction:column; height:100%; box-shadow:0 6px 18px rgba(0,0,0,0.5); }
+
+        .card-media img { width:100%; height:270px; object-fit:cover; display:block; }
+
+        .card-body { padding:12px; display:flex; flex-direction:column; gap:8px; flex:1 1 auto; }
+
+        .card-title { margin:0; color:#e50914; font-size:1.05rem; }
+
+        .card-description { margin:0; color:#cfcfcf; font-size:0.9rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; line-clamp:3; overflow:hidden; }
+
+        .card-footer { padding:10px 12px 14px; display:flex; justify-content:flex-end; }
+
+        .remove-guardar-btn { background:#e50914; color:#fff; border:none; border-radius:6px; padding:8px 12px; font-weight:700; cursor:pointer; }
+
+        .card:hover { transform:translateY(-4px); box-shadow:0 12px 30px rgba(0,0,0,0.6); }
+
+        @media (max-width:1024px) {
+
+            #guardados-container { grid-template-columns: repeat(4, 1fr); gap:15px; }
+
+            .card-media img { height:220px; }
+
+            main { padding:0 10px 30px; }
+
+        }
+
+        @media (max-width:600px) {
+
+            #guardados-container { grid-template-columns: repeat(2, 1fr); gap:12px; }
+
+            .card-media img { height:180px; }
+
+            .card-body { padding:8px; }
+
+            .card-title { font-size:1rem; margin:0 0 8px 0; }
+
+            .card-description { font-size:0.85rem; max-height:54px; }
+
+            .card-footer { padding:8px; }
+
+            .remove-guardar-btn { padding:6px 10px; font-size:0.9rem; }
+
+        }
+
+        footer {
+
+            background-color: #1c1c1c;
+
+            text-align: center;
+
+            padding: 15px 10px;
+
+            color: #666;
+
+            font-size: 0.9rem;
+
+        }
+
+        @media (max-width: 600px) {
+
+            .card img {
+
+                height: 200px;
+
+            }
+
+        }
+
+        #toast-container {
+
+            position: fixed;
+
+            top: 30px;
+
+            right: 30px;
+
+            z-index: 99999;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 12px;
+
+            pointer-events: none;
+
+        }
+
+        .toast {
+
+            min-width: 220px;
+
+            max-width: 350px;
+
+            background: #232323;
+
+            color: #fff;
+
+            padding: 16px 24px;
+
+            border-radius: 8px;
+
+            font-size: 1rem;
+
+            box-shadow: 0 2px 12px rgba(229, 9, 20, 0.18);
+
+            opacity: 0.97;
+
+            pointer-events: auto;
+
+            transition: opacity 0.3s, transform 0.3s;
+
+            animation: toastIn 0.3s, toastOut 0.3s 2.7s;
+
+        }
+
+        .toast-success {
+
+            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+
+            color: #222;
+
+        }
+
+        .toast-error {
+
+            background: linear-gradient(90deg, #e50914 60%, #b20710 100%);
+
+            color: #fff;
+
+        }
+
+        .toast-info {
+
+            background: linear-gradient(90deg, #232526 0%, #414345 100%);
+
+            color: #fff;
+
+        }
+
+        .toast.hide {
+
+            opacity: 0;
+
+            transform: translateY(-20px) scale(0.98);
+
+            transition: opacity 0.3s, transform 0.3s;
+
+        }
+
+        @keyframes toastIn {
+
+            from {
+
+                opacity: 0;
+
+                transform: translateY(-20px) scale(0.98);
+
+            }
+
+            to {
+
+                opacity: 0.97;
+
+                transform: none;
+
+            }
+
+        }
+
+        @keyframes toastOut {
+
+            to {
+
+                opacity: 0;
+
+                transform: translateY(-20px) scale(0.98);
+
+            }
+
+        }
+
+        .modal {
+
+            position: fixed;
+
+            top: 0;
+
+            left: 0;
+
+            right: 0;
+
+            bottom: 0;
+
+            background: rgba(0, 0, 0, 0.85);
+
+            z-index: 10000;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            transition: opacity 0.3s;
+
+            animation: fadeInModal 0.3s;
+
+        }
+
+        .modal.hide {
+
+            animation: fadeOutModal 0.3s forwards;
+
+        }
+
+        .modal-content {
+
+            background: #181818;
+
+            color: #eee;
+
+            border-radius: 12px;
+
+            max-width: 700px;
+
+            width: 95vw;
+
+            max-height: 90vh;
+
+            overflow-y: auto;
+
+            position: relative;
+
+            box-shadow: 0 0 30px #000;
+
+            padding: 30px 20px 20px 20px;
+
+            outline: none;
+
+        }
+
+        @keyframes fadeInModal {
+
+            from {
+
+                opacity: 0;
+
+            }
+
+            to {
+
+                opacity: 1;
+
+            }
+
+        }
+
+        @keyframes fadeOutModal {
+
+            to {
+
+                opacity: 0;
+
+                pointer-events: none;
+
+            }
+
+        }
+
+        .modal-close {
+
+            position: absolute;
+
+            top: 12px;
+
+            right: 18px;
+
+            background: none;
+
+            border: none;
+
+            color: #fff;
+
+            font-size: 2rem;
+
+            cursor: pointer;
+
+            z-index: 2;
+
+            transition: color 0.2s;
+
+        }
+
+        .modal-close:hover {
+
+            color: #e50914;
+
+        }
+
+        .modal-movie-header {
+
+            display: flex;
+
+            gap: 20px;
+
+            align-items: flex-start;
+
+            margin-bottom: 18px;
+
+        }
+
+        .modal-movie-poster {
+
+            width: 140px;
+
+            border-radius: 8px;
+
+            box-shadow: 0 2px 10px #000a;
+
+            flex-shrink: 0;
+
+        }
+
+        .modal-movie-info {
+
+            flex: 1;
+
+        }
+
+        .modal-movie-title {
+
+            font-size: 1.5rem;
+
+            color: #e50914;
+
+            margin: 0 0 8px 0;
+
+        }
+
+        .modal-movie-rating {
+
+            font-size: 1.1rem;
+
+            margin-bottom: 8px;
+
+            color: #f1c40f;
+
+        }
+
+        .modal-movie-overview {
+
+            margin-bottom: 16px;
+
+            font-size: 1rem;
+
+            color: #ccc;
+
+        }
+
+        .modal-section-title {
+
+            font-size: 1.1rem;
+
+            color: #e50914;
+
+            margin: 18px 0 8px 0;
+
+        }
+
+        .modal-reviews {
+
+            max-height: 120px;
+
+            overflow-y: auto;
+
+            margin-bottom: 10px;
+
+        }
+
+        .modal-review {
+
+            background: #232323;
+
+            border-radius: 6px;
+
+            padding: 8px 10px;
+
+            margin-bottom: 8px;
+
+            font-size: 0.97rem;
+
+        }
+
+        .modal-review-author {
+
+            font-weight: bold;
+
+            color: #f1c40f;
+
+            margin-bottom: 2px;
+
+            font-size: 0.95em;
+
+        }
+
+        .modal-trailer {
+
+            margin-top: 10px;
+
+            text-align: center;
+
+        }
+
+        .modal-trailer iframe {
+
+            width: 100%;
+
+            max-width: 480px;
+
+            height: 270px;
+
+            border-radius: 8px;
+
+            border: none;
+
+            background: #000;
+
+        }
+
+        @media (max-width: 600px) {
+
+            .modal-content {
+
+                padding: 10px 2vw 10px 2vw;
+
+            }
+
+            .modal-movie-header {
+
+                flex-direction: column;
+
+                align-items: center;
+
+            }
+
+            .modal-movie-poster {
+
+                width: 90vw;
+
+                max-width: 220px;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <header>⏰ Ver más tarde</header>
+
+    <nav>
+
+        <a href="dash.html">Inicio</a>
+
+        <a href="peliculas.html">Películas</a>
+
+        <a href="series.html">Series</a>
+
+        <a href="favoritos.html" id="nav-favoritos-btn"
+
+            style="background:#333;color:#eee;font-weight:bold;">Favoritos</a>
+
+        <a href="guardados.html" aria-current="page" style="background:#333;color:#eee;font-weight:bold;">Ver más
+
+            tarde</a>
+
+        <button id="logout-btn" class="btn-logout">Cerrar sesión</button>
+
+    </nav>
+
+    <main>
+
+        <div id="guardados-container" aria-live="polite" aria-relevant="additions"></div>
+
+    </main>
+
+    <footer>© 2025 UltraFilm Cine & Series. Todos los derechos reservados.</footer>
+
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Modal container (copiado de peliculas.html) -->
+
+    <div id="movie-modal" class="modal" style="display:none;">
+
+        <div class="modal-content" tabindex="0">
+
+            <button class="modal-close" id="modal-close-btn" aria-label="Cerrar modal">&times;</button>
+
+            <div id="modal-body"></div>
+
+        </div>
+
+    </div>
+
+    <script data-cfasync="false" src="/js/tmdb.min.js?v=4-interceptor-agresivo"></script>
+    <script>
+
+        const token = localStorage.getItem('jwt');
+
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+
+    if (!token) {
+
+      alert('No hay JWT en localStorage');
+
+      localStorage.removeItem('jwt');
+
+      localStorage.removeItem('loggedInUser');
+
+      window.location.href = 'login.html';
+
+    }
+
+    if (!loggedInUser || !loggedInUser.id) {
+
+      alert('No hay usuario en localStorage');
+
+      localStorage.removeItem('jwt');
+
+      localStorage.removeItem('loggedInUser');
+
+      window.location.href = 'login.html';
+
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+
+      localStorage.removeItem('loggedInUser');
+
+      window.location.href = 'index.html';
+
+    });
+
+    const guardadosContainer = document.getElementById('guardados-container');
+
+    function showToast(message, type = 'info', duration = 3500) {
+
+      const container = document.getElementById('toast-container');
+
+      const toast = document.createElement('div');
+
+      toast.className = `toast toast-${type}`;
+
+      toast.textContent = message;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+
+        toast.classList.add('hide');
+
+        toast.addEventListener('transitionend', () => toast.remove());
+
+      }, duration);
+
+    }
+
+    async function safeFetch(url, options = {}) {
+
+      try {
+
+        const res = await fetch(url, options);
+
+        if (!res.ok) {
+
+          let errMsg = `Error ${res.status}`;
+
+          try {
+
+            const data = await res.json();
+
+            errMsg = data.error || errMsg;
+
+          } catch {}
+
+          throw new Error(errMsg);
+
+        }
+
+        return await res.json();
+
+      } catch (err) {
+
+        showToast(err.message || 'Error de conexión con el servidor.', 'error');
+
+        throw err;
+
+      }
+
+    }
+
+    async function loadGuardados() {
+
+      let guardadosSeries = [];
+
+      let guardadosPeliculas = [];
+
+      try {
+
+  const resSeries = await fetch(`https://api.ultrafilm.online/guardados?user_id=${loggedInUser.id}`, {
+
+          headers: { 'Authorization': 'Bearer ' + token }
+
+        });
+
+        guardadosSeries = await resSeries.json();
+
+      } catch (e) {
+
+        guardadosSeries = [];
+
+      }
+
+      try {
+
+  const resPeliculas = await fetch(`https://api.ultrafilm.online/guardados_peliculas?user_id=${loggedInUser.id}`, {
+
+          headers: { 'Authorization': 'Bearer ' + token }
+
+        });
+
+        guardadosPeliculas = await resPeliculas.json();
+
+      } catch (e) {
+
+        guardadosPeliculas = [];
+
+      }
+
+      const guardados = [...guardadosSeries, ...guardadosPeliculas];
+
+      if (!guardados.length) {
+
+        guardadosContainer.innerHTML = '<p style="color:#ccc; text-align:center;">No tienes títulos guardados para ver más tarde.</p>';
+
+        return;
+
+      }
+
+      guardadosContainer.innerHTML = guardados.map(p => {
+
+        const titulo = p.title || p.name || 'Título no disponible';
+
+        const tipo = p.name ? 'serie' : 'pelicula';
+
+        const poster = p.poster_path ? 'https://image.tmdb.org/t/p/w500' + p.poster_path : 'https://via.placeholder.com/500x750?text=Sin+Imagen';
+
+        return `
+
+          <article class="card" tabindex="0" aria-label="Guardado: ${titulo}" data-movie-id="${p.id}" data-type="${tipo}">
+
+            <div class="card-media">
+
+              <img src="${poster}" alt="Poster de ${titulo}" />
+
+            </div>
+
+            <div class="card-body">
+
+              <h3 class="card-title">${titulo}</h3>
+
+              <p class="card-description">${p.overview || 'Sin descripción disponible.'}</p>
+
+            </div>
+
+            <div class="card-footer">
+
+              <button class="remove-guardar-btn" data-id="${p.id}" data-tipo="${tipo}" aria-label="Quitar ${titulo} de guardados">
+
+                ❌ Quitar de guardados
+
+              </button>
+
+            </div>
+
+          </article>
+
+        `;
+
+      }).join('');
+
+      guardadosContainer.querySelectorAll('.remove-guardar-btn').forEach(btn => {
+
+        btn.addEventListener('click', async (e) => {
+
+          const itemId = btn.getAttribute('data-id');
+
+          const tipo = btn.getAttribute('data-tipo');
+
+          const card = btn.closest('.card');
+
+          const titulo = card.querySelector('.card-title').textContent;
+
+          btn.disabled = true;
+
+          try {
+
+            await quitarGuardado(itemId, tipo);
+
+            showToast(`Eliminaste "${titulo}" de guardados.`, 'success');
+
+            card.classList.add('removing');
+
+            setTimeout(() => card.remove(), 250);
+
+            if (!guardadosContainer.querySelector('.card')) {
+
+              guardadosContainer.innerHTML = '<p style="color:#ccc; text-align:center;">No tienes títulos guardados para ver más tarde.</p>';
+
+            }
+
+          } catch {
+
+            btn.disabled = false;
+
+          }
+
+        }, { once: true });
+
+      });
+
+        if (typeof attachCardHandlers === 'function') attachCardHandlers();
+
+    }
+
+    async function quitarGuardado(itemId, tipo) {
+
+      if (tipo === 'serie') {
+
+  await safeFetch('https://api.ultrafilm.online/guardados', {
+
+          method: 'DELETE',
+
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+
+          body: JSON.stringify({ user_id: loggedInUser.id, serie_id: Number(itemId) })
+
+        });
+
+      } else {
+
+  await safeFetch('https://api.ultrafilm.online/guardados_peliculas', {
+
+          method: 'DELETE',
+
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+
+          body: JSON.stringify({ user_id: loggedInUser.id, pelicula_id: Number(itemId) })
+
+        });
+
+      }
+
+    }
+
+    loadGuardados();
+
+        const IMG_URL = 'https://image.tmdb.org/t/p/w500';
+
+    const modal = document.getElementById('movie-modal');
+
+    const modalBody = document.getElementById('modal-body');
+
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    let lastFocusedElement = null;
+
+    function attachCardHandlers() {
+
+      document.querySelectorAll('#guardados-container .card').forEach(card => {
+
+        card.addEventListener('click', function(e) {
+
+          if (e.target.closest('.remove-guardar-btn')) return;
+
+          const movieId = this.getAttribute('data-movie-id');
+
+          const tipo = this.getAttribute('data-type');
+
+          if (movieId) openMovieModal(movieId, tipo);
+
+        });
+
+        card.addEventListener('keydown', function(e) {
+
+          if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.remove-guardar-btn')) {
+
+            e.preventDefault();
+
+            const movieId = this.getAttribute('data-movie-id');
+
+            const tipo = this.getAttribute('data-type');
+
+            if (movieId) openMovieModal(movieId, tipo);
+
+          }
+
+        });
+
+      });
+
+    }
+
+    function openMovieModal(movieId, tipo) {
+
+      lastFocusedElement = document.activeElement;
+
+      showMovieDetails(movieId, tipo);
+
+      modal.style.display = 'flex';
+
+      document.body.style.overflow = 'hidden';
+
+      setTimeout(() => {
+
+        modal.querySelector('.modal-content').focus();
+
+      }, 100);
+
+    }
+
+    function closeMovieModal() {
+
+      modal.style.display = 'none';
+
+      document.body.style.overflow = '';
+
+      modalBody.innerHTML = '';
+
+      if (lastFocusedElement) lastFocusedElement.focus();
+
+    }
+
+    modalCloseBtn.addEventListener('click', closeMovieModal);
+
+    modal.addEventListener('click', (e) => {
+
+      if (e.target === modal) closeMovieModal();
+
+    });
+
+    document.addEventListener('keydown', (e) => {
+
+      if (modal.style.display === 'flex' && e.key === 'Escape') closeMovieModal();
+
+    });
+
+    async function showMovieDetails(id, tipo) {
+
+      modalBody.innerHTML = '<div style="text-align:center;padding:40px 0;">Cargando...</div>';
+
+      try {
+
+        const media = tipo === 'serie' ? 'tv' : 'movie';
+
+        const [details, reviewsData, videosData] = await Promise.all([
+
+          window.tmdbFetch(`/${media}/${id}`, { language: 'es-ES' }),
+
+          window.tmdbFetch(`/${media}/${id}/reviews`, { language: 'es-ES', page: 1 }),
+
+          window.tmdbFetch(`/${media}/${id}/videos`, { language: 'es-ES' })
+
+        ]);
+
+        let trailer = null;
+
+        if (videosData.results && videosData.results.length) {
+
+          trailer = videosData.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') || videosData.results.find(v => v.site === 'YouTube');
+
+        }
+
+        const reviews = (reviewsData.results || []).slice(0, 4);
+
+        const title = details.title || details.name || 'Título';
+
+        const release = details.release_date || details.first_air_date || 'N/A';
+
+        const runtime = details.runtime || (details.episode_run_time && details.episode_run_time[0]) || null;
+
+        modalBody.innerHTML = `
+
+          <div class="modal-movie-header">
+
+            <img class="modal-movie-poster" src="${details.poster_path ? IMG_URL + details.poster_path : 'https://via.placeholder.com/500x750?text=No+Image'}" alt="Poster de ${title}" />
+
+            <div class="modal-movie-info">
+
+              <h2 class="modal-movie-title">${title}</h2>
+
+              <div class="modal-movie-rating">⭐ ${details.vote_average ? details.vote_average.toFixed(1) : 'N/A'} / 10 (${details.vote_count || 0} votos)</div>
+
+              <div class="modal-movie-overview">${details.overview || 'Sin descripción.'}</div>
+
+              <div><b>Géneros:</b> ${details.genres && details.genres.length ? details.genres.map(g => g.name).join(', ') : 'N/A'}</div>
+
+              <div><b>Fecha de estreno:</b> ${release}</div>
+
+              <div><b>Duración:</b> ${runtime ? runtime + ' min' : 'N/A'}</div>
+
+              <div style="margin-top:10px;">
+
+                <b>Ver más:</b>
+
+                <a href="https://www.themoviedb.org/${media}/${details.id}" target="_blank" rel="noopener" style="color:#00b3ff;">TMDB</a>
+
+                ${details.homepage ? `| <a href="${details.homepage}" target="_blank" rel="noopener" style="color:#00ff99;">Sitio Oficial</a>` : ''}
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <div>
+
+            <div class="modal-section-title">Reseñas</div>
+
+            <div class="modal-reviews">
+
+              ${reviews.length ? reviews.map(r => `
+
+                <div class="modal-review">
+
+                  <div class="modal-review-author">${r.author}</div>
+
+                  <div>${r.content.length > 300 ? r.content.slice(0,300) + '...' : r.content}</div>
+
+                </div>
+
+              `).join('') : '<div style="color:#aaa;">No hay reseñas disponibles.</div>'}
+
+            </div>
+
+          </div>
+
+          <div>
+
+            <div class="modal-section-title">Trailer</div>
+
+            <div class="modal-trailer">
+
+              ${trailer ? `<iframe src="https://www.youtube.com/embed/${trailer.key}" allowfullscreen title="Trailer" loading="lazy"></iframe>` : '<div style="color:#aaa;">No hay trailer disponible.</div>'}
+
+            </div>
+
+          </div>
+
+        `;
+
+      } catch (e) {
+
+        modalBody.innerHTML = '<div style="color:#e50914;text-align:center;padding:40px 0;">Error al cargar detalles.</div>';
+
+      }
+
+    }
+
+    </script>
+
+  <script src="/js/maintenance.js" defer></script>
+
+</body>
+
+</html>

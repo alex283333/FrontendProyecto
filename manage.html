@@ -1,893 +1,802 @@
 <!DOCTYPE html>
-
 <html lang="es">
 
 <head>
-
-  <meta charset="UTF-8" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <title>Gestionar Cuenta</title>
-  <link rel="manifest" href="manifest.json">
-
-  <meta name="theme-color" content="#121212">
-
-  <script>
-
-    if ('serviceWorker' in navigator) {
-
-      window.addEventListener('load', () => {
-
-        navigator.serviceWorker.register('sw.js');
-
-      });
-
-    }
-
-  </script>
-
-  <style>
-
-    body {
-
-      background-color: #121212;
-
-      color: #eee;
-
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-
-      margin: 0;
-
-      padding: 20px;
-
-    }
-
-    h1 {
-
-      text-align: center;
-
-      color: #e50914;
-
-      margin-bottom: 30px;
-
-    }
-
-    .contenedor {
-
-      max-width: 500px;
-
-      margin: auto;
-
-      background-color: #1c1c1c;
-
-      padding: 30px;
-
-      border-radius: 10px;
-
-      box-shadow: 0 0 15px rgba(229, 9, 20, 0.7);
-
-    }
-
-    label {
-
-      display: block;
-
-      margin: 10px 0 5px;
-
-      color: #ccc;
-
-    }
-
-    input {
-
-      width: 100%;
-
-      padding: 10px;
-
-      margin-bottom: 15px;
-
-      border: none;
-
-      border-radius: 5px;
-
-      background-color: #2a2a2a;
-
-      color: white;
-
-    }
-
-    button, .btn-confirm, .btn-logout {
-
-      background: linear-gradient(90deg, #e50914 60%, #b20710 100%);
-
-      color: white;
-
-      font-weight: bold;
-
-      padding: 12px;
-
-      width: 100%;
-
-      border: none;
-
-      border-radius: 8px;
-
-      cursor: pointer;
-
-      font-size: 1.1rem;
-
-      margin-top: 10px;
-
-      box-shadow: 0 2px 8px rgba(229,9,20,0.15);
-
-      transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
-
-      outline: none;
-
-      letter-spacing: 0.5px;
-
-    }
-
-    button:hover, .btn-confirm:hover, .btn-logout:hover {
-
-      background: linear-gradient(90deg, #b20710 60%, #e50914 100%);
-
-      box-shadow: 0 4px 16px rgba(229,9,20,0.25);
-
-      transform: translateY(-2px) scale(1.03);
-
-    }
-
-    /* Botón de confirmación rojo */
-
-    .btn-confirm {
-
-      background: linear-gradient(90deg, #e50914 60%, #b20710 100%);
-
-      color: #fff;
-
-      margin-top: 18px;
-
-      width: 100%;
-
-      border: none;
-
-      border-radius: 8px;
-
-      font-weight: bold;
-
-      font-size: 1.1rem;
-
-      box-shadow: 0 2px 8px rgba(229,9,20,0.15);
-
-      transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
-
-      outline: none;
-
-      letter-spacing: 0.5px;
-
-      cursor: pointer;
-
-    }
-
-    .btn-confirm:hover {
-
-      background: linear-gradient(90deg, #b20710 60%, #e50914 100%);
-
-      box-shadow: 0 4px 16px rgba(229,9,20,0.25);
-
-      transform: translateY(-2px) scale(1.03);
-
-    }
-
-    /* Modal de confirmación */
-
-    .modal-confirm-bg {
-
-      position: fixed;
-
-      top: 0; left: 0; right: 0; bottom: 0;
-
-      background: rgba(0,0,0,0.7);
-
-      z-index: 9999;
-
-      display: flex;
-
-      align-items: center;
-
-      justify-content: center;
-
-    }
-
-    .modal-confirm {
-
-      background: #181818;
-
-      color: #fff;
-
-      border-radius: 12px;
-
-      padding: 32px 28px 24px 28px;
-
-      box-shadow: 0 0 30px #000;
-
-      max-width: 350px;
-
-      width: 90vw;
-
-      text-align: center;
-
-      position: relative;
-
-      animation: fadeInConfirm 0.2s;
-
-    }
-
-    @keyframes fadeInConfirm {
-
-      from { opacity: 0; transform: scale(0.95); }
-
-      to { opacity: 1; transform: scale(1); }
-
-    }
-
-    .modal-confirm-btns {
-
-      display: flex;
-
-      gap: 18px;
-
-      margin-top: 24px;
-
-      justify-content: center;
-
-    }
-
-    .modal-confirm-btn {
-
-      flex: 1;
-
-      padding: 12px 0;
-
-      border: none;
-
-      border-radius: 8px;
-
-      font-size: 1rem;
-
-      font-weight: bold;
-
-      cursor: pointer;
-
-      transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
-
-      box-shadow: 0 2px 8px rgba(229,9,20,0.10);
-
-      outline: none;
-
-    }
-
-    .modal-confirm-btn.confirm {
-
-      background: linear-gradient(90deg, #e50914 60%, #b20710 100%);
-
-      color: #fff;
-
-    }
-
-    .modal-confirm-btn.confirm:hover {
-
-      background: linear-gradient(90deg, #b20710 60%, #e50914 100%);
-
-    }
-
-    .modal-confirm-btn.cancel {
-
-      background: #2a2a2a;
-
-      color: #fff;
-
-    }
-
-    .modal-confirm-btn.cancel:hover {
-
-      background: #444;
-
-    }
-
-    .mensaje {
-
-      text-align: center;
-
-      margin-top: 15px;
-
-      font-weight: bold;
-
-    }
-
-    .volver {
-
-      text-align: center;
-
-      margin-top: 20px;
-
-    }
-
-    .volver a {
-
-      color: #e50914;
-
-      text-decoration: none;
-
-    }
-
-    /* Notificaciones toast globales */
-
-    .toast-global-container {
-
-      position: fixed;
-
-      top: 24px;
-
-      right: 24px;
-
-      z-index: 99999;
-
-      display: flex;
-
-      flex-direction: column;
-
-      gap: 12px;
-
-      max-width: 340px;
-
-      pointer-events: none;
-
-    }
-
-    .toast-global {
-
-      background: #e50914;
-
-      color: #fff;
-
-      padding: 14px 22px;
-
-      border-radius: 10px;
-
-      font-weight: bold;
-
-      font-size: 1rem;
-
-      box-shadow: 0 4px 16px rgba(229,9,20,0.18);
-
-      opacity: 0;
-
-      transform: translateX(100%);
-
-      animation: toastIn 0.4s forwards, toastOut 0.4s 2.6s forwards;
-
-      pointer-events: auto;
-
-      user-select: none;
-
-      letter-spacing: 0.5px;
-
-    }
-
-    .toast-global.success {
-
-      background: linear-gradient(90deg, #27ae60 60%, #219150 100%);
-
-    }
-
-    .toast-global.fail {
-
-      background: linear-gradient(90deg, #c0392b 60%, #e50914 100%);
-
-    }
-
-    .toast-global.info {
-
-      background: linear-gradient(90deg, #2980b9 60%, #6dd5fa 100%);
-
-    }
-
-    @keyframes toastIn {
-
-      to {
-
-        opacity: 1;
-
-        transform: translateX(0);
-
-      }
-
-    }
-
-    @keyframes toastOut {
-
-      to {
-
-        opacity: 0;
-
-        transform: translateX(100%);
-
-      }
-
-    }
-
-    /* Toast notification styles */
-
-    #toast-container {
-
-      position: fixed;
-
-      top: 30px;
-
-      right: 30px;
-
-      z-index: 99999;
-
-      display: flex;
-
-      flex-direction: column;
-
-      gap: 12px;
-
-      pointer-events: none;
-
-    }
-
-    .toast {
-
-      min-width: 220px;
-
-      max-width: 350px;
-
-      background: #232323;
-
-      color: #fff;
-
-      padding: 16px 24px;
-
-      border-radius: 8px;
-
-      font-size: 1rem;
-
-      box-shadow: 0 2px 12px rgba(229,9,20,0.18);
-
-      opacity: 0.97;
-
-      pointer-events: auto;
-
-      transition: opacity 0.3s, transform 0.3s;
-
-      animation: toastIn 0.3s;
-
-    }
-
-    .toast-success { background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%); color: #222; }
-
-    .toast-error { background: linear-gradient(90deg, #e50914 60%, #b20710 100%); color: #fff; }
-
-    .toast-info { background: linear-gradient(90deg, #232526 0%, #414345 100%); color: #fff; }
-
-    .toast.hide {
-
-      opacity: 0;
-
-      transform: translateY(-20px) scale(0.98);
-
-      transition: opacity 0.3s, transform 0.3s;
-
-    }
-
-    @keyframes toastIn {
-
-      from { opacity: 0; transform: translateY(-20px) scale(0.98); }
-
-      to { opacity: 0.97; transform: none; }
-
-    }
-
-    @keyframes fadeInModal {
-
-      from { opacity: 0; }
-
-      to { opacity: 1; }
-
-    }
-
-    @keyframes fadeOutModal {
-
-      to { opacity: 0; pointer-events: none; }
-
-    }
-
-  </style>
-
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Configuración de Cuenta - UltraFilm</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a0f">
+
+    <link rel="preconnect" href="https://api.ultrafilm.online">
+    <link rel="preconnect" href="https://image.tmdb.org">
+    <link rel="preconnect" href="https://www.themoviedb.org">
+    <link rel="dns-prefetch" href="https://api.ultrafilm.online">
+    <link rel="dns-prefetch" href="https://image.tmdb.org">    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a0a0f 100%);
+            color: #eee;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(229, 9, 20, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(229, 9, 20, 0.03) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-btn {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(229, 9, 20, 0.2);
+            border: 1px solid rgba(229, 9, 20, 0.3);
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(229, 9, 20, 0.3);
+            transform: translateY(-50%) translateX(-2px);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #e50914 0%, #ff6b6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: #ccc;
+            font-size: 1.1rem;
+            margin-top: 8px;
+        }
+
+        .settings-container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 768px) {
+            .settings-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .settings-section {
+            background: rgba(28, 28, 28, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(229, 9, 20, 0.2);
+            box-shadow: 0 8px 32px rgba(229, 9, 20, 0.2);
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: #e50914;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, #e50914, transparent);
+            margin-left: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .input-with-icon {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: rgba(34, 34, 34, 0.6);
+            backdrop-filter: blur(5px);
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: rgba(229, 9, 20, 0.5);
+            box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.1);
+            background: rgba(51, 51, 51, 0.8);
+        }
+
+        input::placeholder {
+            color: #999;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #e50914 0%, #b20710 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(229, 9, 20, 0.4);
+            background: linear-gradient(135deg, #ff1a1a 0%, #d40000 100%);
+        }
+
+        .btn:hover::before {
+            opacity: 1;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ccc;
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(229, 9, 20, 0.3);
+            color: #fff;
+        }
+
+        .user-info-card {
+            background: linear-gradient(135deg, rgba(229, 9, 20, 0.1), rgba(229, 9, 20, 0.05));
+            border: 1px solid rgba(229, 9, 20, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #ccc;
+            font-weight: 600;
+        }
+
+        .info-value[title] {
+            position: relative;
+        }
+
+        .info-value[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
+        }
+
+        .info-value[title]:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: rgba(0, 0, 0, 0.9);
+            margin-bottom: -5px;
+        }
+
+        .verification-badge {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: #222;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .security-tips {
+            background: rgba(52, 152, 219, 0.1);
+            border: 1px solid rgba(52, 152, 219, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .security-tips h4 {
+            color: #3498db;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .security-tips ul {
+            color: #ccc;
+            font-size: 0.85rem;
+            padding-left: 20px;
+        }
+
+        .security-tips li {
+            margin-bottom: 4px;
+        }
+
+        #message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .message.success {
+            background: rgba(67, 233, 123, 0.1);
+            border: 1px solid rgba(67, 233, 123, 0.3);
+            color: #43e97b;
+            display: block;
+        }
+
+        .message.error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: #ff6b6b;
+            display: block;
+        }
+
+        .modal-confirm-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+            padding: 20px;
+        }
+
+        .modal-confirm {
+            background: linear-gradient(135deg, #1c1c1c 0%, #2a1a1f 100%);
+            color: #eee;
+            border-radius: 20px;
+            padding: 35px 30px 25px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(229, 9, 20, 0.3);
+            max-width: 400px;
+            width: 95vw;
+            text-align: center;
+            position: relative;
+            animation: scaleIn 0.3s ease;
+        }
+
+        .modal-confirm-btns {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            justify-content: center;
+        }
+
+        .modal-confirm-btn {
+            flex: 1;
+            padding: 14px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-confirm-btn.confirm {
+            background: linear-gradient(135deg, #e50914 0%, #b20710 100%);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(229, 9, 20, 0.3);
+        }
+
+        .modal-confirm-btn.confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(229, 9, 20, 0.4);
+        }
+
+        .modal-confirm-btn.cancel {
+            background: rgba(51, 51, 51, 0.6);
+            color: #fff;
+        }
+
+        .modal-confirm-btn.cancel:hover {
+            background: rgba(68, 68, 68, 0.8);
+            transform: translateY(-2px);
+        }
+
+        #toast-container {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .toast {
+            min-width: 250px;
+            max-width: 400px;
+            background: rgba(35, 35, 35, 0.95);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 18px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            pointer-events: auto;
+            animation: toastIn 0.4s ease forwards;
+        }
+
+        .toast-success {
+            background: linear-gradient(135deg, rgba(67, 233, 123, 0.2) 0%, rgba(56, 249, 215, 0.2) 100%);
+            border-color: rgba(67, 233, 123, 0.5);
+            color: #222;
+        }
+
+        .toast-error {
+            background: linear-gradient(135deg, rgba(229, 9, 20, 0.2) 0%, rgba(178, 7, 16, 0.2) 100%);
+            border-color: rgba(229, 9, 20, 0.5);
+            color: #fff;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+        }
+    </style>
 </head>
 
 <body>
-
-
-
-  <h1>Gestionar Cuenta</h1>
-
-  <div class="contenedor">
-
-    <p><strong>Usuario actual:</strong> <span id="usuario-nombre"></span></p>
-
-
-
-    <label for="nuevoCorreo">Cambiar correo electrónico</label>
-
-    <input type="email" id="nuevoCorreo" placeholder="Nuevo correo" />
-
-    <button class="btn-confirm" onclick="cambiarCorreo()">Actualizar correo</button>
-
-
-
-    <label for="actualContra">Contraseña actual</label>
-
-    <input type="password" id="actualContra" placeholder="Tu contraseña actual" />
-
-
-
-    <label for="nuevaContra">Nueva contraseña</label>
-
-    <input type="password" id="nuevaContra" placeholder="Nueva contraseña" />
-
-
-
-    <label for="confirmarContra">Confirmar nueva contraseña</label>
-
-    <input type="password" id="confirmarContra" placeholder="Repite la nueva contraseña" />
-
-    <button class="btn-confirm" onclick="cambiarContraseña()">Cambiar contraseña</button>
-
-
-
-    <div id="mensaje" class="mensaje"></div>
-
-
-
-    <div class="volver">
-
-      <a href="dash.html">⬅ Volver al panel</a>
-
+    <div class="header">
+        <a href="dash.html" class="back-btn">← Volver</a>
+        <h1>Configuración de Cuenta</h1>
+        <p class="subtitle">Gestiona tu información personal y preferencias de seguridad</p>
     </div>
 
+    <div class="settings-container">
 
+        <div class="settings-section">
+            <h2 class="section-title">👤 Información Personal</h2>
 
-    
+            <div class="user-info-card">
+                <div class="info-item">
+                    <span class="info-label">Usuario:</span>
+                    <span class="info-value" id="usuario-nombre">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value" id="usuario-email">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Estado:</span>
+                    <span class="verification-badge" id="verification-status">Verificado</span>
+                </div>
+            </div>
 
-    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
-
-
-
-    
-
-    <div id="modal-confirm-bg" class="modal-confirm-bg" style="display:none;">
-
-      <div class="modal-confirm">
-
-        <div id="modal-confirm-msg">¿Confirmas cambiar tu contraseña?</div>
-
-        <div class="modal-confirm-btns">
-
-          <button class="modal-confirm-btn confirm" id="modal-confirm-yes">Confirmar</button>
-
-          <button class="modal-confirm-btn cancel" id="modal-confirm-no">Cancelar</button>
-
+            <div class="form-group">
+                <label for="nuevoCorreo">Cambiar correo electrónico</label>
+                <div class="input-with-icon">
+                    <span class="input-icon">📧</span>
+                    <input type="email" id="nuevoCorreo" placeholder="nuevo@email.com" />
+                </div>
+            </div>
+            <button class="btn" onclick="cambiarCorreo()">Actualizar Email</button>
         </div>
 
-      </div>
+        <div class="settings-section">
+            <h2 class="section-title">🔒 Seguridad</h2>
 
+            <div class="form-group">
+                <label for="actualContra">Contraseña actual</label>
+                <div class="input-with-icon">
+                    <span class="input-icon">🔐</span>
+                    <input type="password" id="actualContra" placeholder="••••••••" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="nuevaContra">Nueva contraseña</label>
+                <div class="input-with-icon">
+                    <span class="input-icon">🔄</span>
+                    <input type="password" id="nuevaContra" placeholder="••••••••" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmarContra">Confirmar nueva contraseña</label>
+                <div class="input-with-icon">
+                    <span class="input-icon">✅</span>
+                    <input type="password" id="confirmarContra" placeholder="••••••••" />
+                </div>
+            </div>
+
+            <button class="btn" onclick="cambiarContraseña()">Cambiar Contraseña</button>
+
+            <div class="security-tips">
+                <h4>💡 Consejos de seguridad:</h4>
+                <ul>
+                    <li>Usa al menos 8 caracteres</li>
+                    <li>Incluye mayúsculas y números</li>
+                    <li>Añade símbolos especiales</li>
+                    <li>No reutilices contraseñas</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
-  </div>
+    <div id="message" class="message"></div>
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
+    <div id="modal-confirm-bg" class="modal-confirm-bg" style="display:none;">
+        <div class="modal-confirm">
+            <div id="modal-confirm-msg">¿Confirmas cambiar tu contraseña?</div>
+            <div class="modal-confirm-btns">
+                <button class="modal-confirm-btn confirm" id="modal-confirm-yes">Confirmar</button>
+                <button class="modal-confirm-btn cancel" id="modal-confirm-no">Cancelar</button>
+            </div>
+        </div>
+    </div>
 
+    <script>
 
-  <script>
-
-    
-
-    const jwt = localStorage.getItem('jwt');
-
-    if (!jwt) {
-
-      window.location.href = 'login.html';
-
-    }
-
-
-
-    
-
-    function showToast(message, type = 'info', duration = 3500) {
-
-      const container = document.getElementById('toast-container');
-
-      const toast = document.createElement('div');
-
-      toast.className = `toast toast-${type}`;
-
-      toast.textContent = message;
-
-      container.appendChild(toast);
-
-      setTimeout(() => {
-
-        toast.classList.add('hide');
-
-        toast.addEventListener('transitionend', () => toast.remove());
-
-      }, duration);
-
-    }
-
-
-
-    
-
-    async function safeFetch(url, options = {}) {
-
-      options.headers = options.headers || {};
-
-      if (url.startsWith('https://api.ultrafilm.online')) {
-
-        options.headers['Authorization'] = 'Bearer ' + jwt;
-
-      }
-
-      try {
-
-        const res = await fetch(url, options);
-
-        if (!res.ok) {
-
-          let errMsg = `Error ${res.status}`;
-
-          try {
-
-            const data = await res.json();
-
-            errMsg = data.error || errMsg;
-
-          } catch {}
-
-          throw new Error(errMsg);
-
-        }
-
-        return await res.json();
-
-      } catch (err) {
-
-        showToast(err.message || 'Error de conexión con el servidor.', 'error');
-
-        throw err;
-
-      }
-
-    }
-
-
-
+    const token = localStorage.getItem('jwt');
     const usuario = JSON.parse(localStorage.getItem("loggedInUser"));
 
-    if (!usuario || !usuario.id) {
-
-      window.location.href = "login.html";
-
-    } else {
-
-      document.getElementById("usuario-nombre").textContent = usuario.username;
-
+    if (!token || !usuario || !usuario.id) {
+      window.location.href = 'login.html';
     }
 
+function blurEmail(email) {
+    if (!email || !email.includes('@')) return '***@***.***';
 
+    const [localPart, domain] = email.split('@');
+    const domainParts = domain.split('.');
+    const tld = domainParts.pop(); 
+
+    const mainDomain = domainParts.join('.');
+
+    const visibleLocal = localPart.length > 2 ? localPart.slice(-2) : localPart;
+    const blurredLocal = '*'.repeat(Math.max(0, localPart.length - 2)) + visibleLocal;
+
+    const visibleDomain = mainDomain.length > 3 ? mainDomain.slice(-3) : mainDomain;
+    const blurredDomain = '*'.repeat(Math.max(0, mainDomain.length - 3)) + visibleDomain;
+
+    return `${blurredLocal}@${blurredDomain}.${tld}`;
+}
+
+document.getElementById("usuario-nombre").textContent = usuario.username || 'Usuario';
+
+if (usuario.email) {
+    const blurredEmail = blurEmail(usuario.email);
+    document.getElementById("usuario-email").textContent = blurredEmail;
+
+    document.getElementById("usuario-email").title = `Email completo: ${usuario.email}`;
+    document.getElementById("usuario-email").style.cursor = 'help';
+} else {
+    document.getElementById("usuario-email").textContent = 'No especificado';
+}
+
+    if (usuario.is_verified) {
+      document.getElementById("verification-status").textContent = "Verificado";
+    } else {
+      document.getElementById("verification-status").textContent = "No verificado";
+      document.getElementById("verification-status").style.background = "linear-gradient(135deg, #ff6b6b, #e50914)";
+      document.getElementById("verification-status").style.color = "#fff";
+    }
+
+    function showToast(message, type = 'info', duration = 3500) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('hide');
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    async function safeFetch(url, options = {}) {
+      options.headers = options.headers || {};
+      if (url.startsWith('https://api.ultrafilm.online')) {
+        options.headers['Authorization'] = 'Bearer ' + token;
+      }
+      try {
+        const res = await fetch(url, options);
+        if (!res.ok) {
+          let errMsg = `Error ${res.status}`;
+          try {
+            const data = await res.json();
+            errMsg = data.error || errMsg;
+          } catch {}
+          throw new Error(errMsg);
+        }
+        return await res.json();
+      } catch (err) {
+        showToast(err.message || 'Error de conexión con el servidor.', 'error');
+        throw err;
+      }
+    }
 
     async function cambiarCorreo() {
-
       const nuevoCorreo = document.getElementById("nuevoCorreo").value.trim();
-
       if (!nuevoCorreo || !nuevoCorreo.includes("@")) {
-
         showToast("Ingresa un correo válido.", "error");
-
         return;
-
       }
 
       try {
-
-  const data = await safeFetch('https://api.ultrafilm.online/update_email', {
-
+        const data = await safeFetch('https://api.ultrafilm.online/update_email', {
           method: 'POST',
-
           headers: { 'Content-Type': 'application/json' },
-
           body: JSON.stringify({ user_id: usuario.id, email: nuevoCorreo })
-
         });
 
         if (data.ok) {
-
-          showToast("Correo actualizado correctamente.", "success");
-
+          showToast("✅ Correo actualizado correctamente", "success");
+          document.getElementById("usuario-email").textContent = nuevoCorreo;
           document.getElementById("nuevoCorreo").value = "";
 
+          usuario.email = nuevoCorreo;
+          localStorage.setItem("loggedInUser", JSON.stringify(usuario));
         } else {
-
           showToast(data.error || "Error al actualizar correo.", "error");
-
         }
+      } catch (error) {
 
-      } catch {}
-
+      }
     }
-
-
 
     function validarSeguridad(contra) {
-
       const minLargo = contra.length >= 8;
-
       const mayus = /[A-Z]/.test(contra);
-
       const numero = /[0-9]/.test(contra);
-
       const simbolo = /[^A-Za-z0-9]/.test(contra);
-
       return minLargo && mayus && numero && simbolo;
-
     }
 
-
-
     function showConfirmModal(msg, onConfirm) {
-
       const bg = document.getElementById('modal-confirm-bg');
-
       const msgDiv = document.getElementById('modal-confirm-msg');
-
       msgDiv.textContent = msg;
-
       bg.style.display = 'flex';
 
       function close() {
-
         bg.style.display = 'none';
-
         yes.removeEventListener('click', confirmHandler);
-
         no.removeEventListener('click', cancelHandler);
-
       }
 
       const yes = document.getElementById('modal-confirm-yes');
-
       const no = document.getElementById('modal-confirm-no');
 
       function confirmHandler() { close(); onConfirm(); }
-
       function cancelHandler() { close(); }
 
       yes.addEventListener('click', confirmHandler);
-
       no.addEventListener('click', cancelHandler);
-
     }
 
-
-
     async function cambiarContraseña() {
-
       const actual = document.getElementById("actualContra").value;
-
       const nueva = document.getElementById("nuevaContra").value;
-
       const confirmar = document.getElementById("confirmarContra").value;
 
       if (!actual || !nueva || !confirmar) {
-
         showToast("Por favor, completa todos los campos.", "error");
-
         return;
-
       }
 
       if (nueva !== confirmar) {
-
-        showToast("La nueva contraseña no coincide.", "error");
-
+        showToast("Las contraseñas no coinciden.", "error");
         return;
-
       }
 
       if (!validarSeguridad(nueva)) {
-
-        showToast("La nueva contraseña debe tener mínimo 8 caracteres, una mayúscula, un número y un símbolo.", "error");
-
+        showToast("La contraseña debe tener 8+ caracteres, mayúsculas, números y símbolos.", "error");
         return;
-
       }
 
-      showConfirmModal('¿Confirmas cambiar tu contraseña?', async () => {
-
+      showConfirmModal('¿Estás seguro de que quieres cambiar tu contraseña?', async () => {
         try {
-
           const data = await safeFetch('https://api.ultrafilm.online/update_password', {
-
             method: 'POST',
-
             headers: { 'Content-Type': 'application/json' },
-
-            body: JSON.stringify({ user_id: usuario.id, old_password: actual, new_password: nueva })
-
+            body: JSON.stringify({ 
+              user_id: usuario.id, 
+              old_password: actual, 
+              new_password: nueva 
+            })
           });
 
           if (data.ok) {
-
-            showToast("Contraseña actualizada correctamente.", "success");
-
+            showToast("✅ Contraseña actualizada correctamente", "success");
             document.getElementById("actualContra").value = "";
-
             document.getElementById("nuevaContra").value = "";
-
             document.getElementById("confirmarContra").value = "";
-
           } else {
-
             showToast(data.error || "Error al actualizar contraseña.", "error");
-
           }
+        } catch (error) {
 
-        } catch {}
-
+        }
       });
-
     }
 
-
-
-    
-
-    document.getElementById('logout-btn').addEventListener('click', async () => {
-
-      if (jwt) {
-
-        try {
-
-          await fetch('https://api.ultrafilm.online/logout', {
-
-            method: 'POST',
-
-            headers: { 'Authorization': 'Bearer ' + jwt }
-
-          });
-
-        } catch {}
-
-      }
-
-      localStorage.removeItem('jwt');
-
-      localStorage.removeItem('loggedInUser');
-
-      window.location.href = 'login.html';
-
-    });
-
-  </script>
-
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+    </script>
 </body>
 
 </html>
-

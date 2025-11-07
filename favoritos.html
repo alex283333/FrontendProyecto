@@ -6,7 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Favoritos - UltraFilm</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
     <meta name="theme-color" content="#121212">
+
+    <link rel="preconnect" href="https://api.ultrafilm.online">
+    <link rel="preconnect" href="https://image.tmdb.org">
+    <link rel="preconnect" href="https://www.themoviedb.org">
+    <link rel="dns-prefetch" href="https://api.ultrafilm.online">
+    <link rel="dns-prefetch" href="https://image.tmdb.org"> 
+
     <script>
 
         (function() {
@@ -32,411 +40,6 @@
           });
         }
     </script>
-    <style>
-
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #121212;
-            color: #eee;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        header {
-            background: #1c1c1c;
-            padding: 15px 20px;
-            text-align: center;
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #e50914;
-        }
-
-        nav {
-            background: #222;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        nav a {
-            color: #eee;
-            text-decoration: none;
-            font-weight: 700;
-            padding: 8px 14px;
-            border-radius: 6px;
-            background: #333;
-        }
-
-        nav a:hover {
-            background: #e50914;
-            color: #fff;
-        }
-
-        .btn-logout {
-            background: linear-gradient(90deg, #e50914 60%, #b20710 100%);
-            color: #fff;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        main {
-            flex: 1 0 auto;
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 16px 40px;
-        }
-
-        #favoritos-container {
-            display: grid;
-            grid-template-columns: repeat(6, 1fr);
-            gap: 20px;
-        }
-
-        .card {
-            background: #1e1e1e;
-            border-radius: 10px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
-        }
-
-        .card-media img {
-            width: 100%;
-            height: 270px;
-            object-fit: cover;
-            display: block;
-        }
-
-        .card-body {
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex: 1 1 auto;
-        }
-
-        .card-title {
-            margin: 0;
-            color: #e50914;
-            font-size: 1.05rem;
-        }
-
-        .card-description {
-            margin: 0;
-            color: #cfcfcf;
-            font-size: 0.9rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            line-clamp: 3;
-            overflow: hidden;
-        }
-
-        .card-footer {
-            padding: 10px 12px 14px;
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .remove-fav-btn {
-            background: #e50914;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 12px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
-        }
-
-        footer {
-            background: #1c1c1c;
-            text-align: center;
-            padding: 15px;
-            color: #888;
-            font-size: 0.9rem;
-        }
-
-        @media (max-width:1024px) {
-            #favoritos-container {
-                grid-template-columns: repeat(4, 1fr);
-                gap: 15px;
-            }
-
-            .card-media img {
-                height: 220px;
-            }
-
-            main {
-                padding: 0 10px 30px;
-            }
-        }
-
-        @media (max-width:600px) {
-            #favoritos-container {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-            }
-
-            .card-media img {
-                height: 180px;
-            }
-
-            .card-body {
-                padding: 8px;
-            }
-
-            .card-title {
-                font-size: 1rem;
-                margin: 0 0 8px 0;
-            }
-
-            .card-description {
-                font-size: 0.85rem;
-                max-height: 54px;
-            }
-
-            .card-footer {
-                padding: 8px;
-            }
-
-            .remove-fav-btn {
-                padding: 6px 10px;
-                font-size: 0.9rem;
-            }
-        }
-
-        #toast-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .toast {
-            padding: 12px 16px;
-            border-radius: 8px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
-            opacity: 0.97;
-            animation: toastIn 0.3s;
-        }
-
-        .toast-success {
-            background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
-            color: #222;
-        }
-
-        .toast-error {
-            background: linear-gradient(90deg, #e50914 60%, #b20710 100%);
-            color: #fff;
-        }
-
-        .toast-info {
-            background: linear-gradient(90deg, #232526 0%, #414345 100%);
-            color: #fff;
-        }
-
-        .toast.hide {
-            opacity: 0;
-            transform: translateY(-20px) scale(0.98);
-            transition: opacity 0.3s, transform 0.3s;
-        }
-
-        @keyframes toastIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px) scale(0.98);
-            }
-
-            to {
-                opacity: 0.97;
-                transform: none;
-            }
-        }
-
-        @keyframes toastOut {
-            to {
-                opacity: 0;
-                transform: translateY(-20px) scale(0.98);
-            }
-        }
-
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.85);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.3s;
-            animation: fadeInModal 0.3s;
-        }
-
-        .modal.hide {
-            animation: fadeOutModal 0.3s forwards;
-        }
-
-        .modal-content {
-            background: #181818;
-            color: #eee;
-            border-radius: 12px;
-            max-width: 700px;
-            width: 95vw;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: 0 0 30px #000;
-            padding: 30px 20px 20px 20px;
-            outline: none;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 12px;
-            right: 18px;
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 2rem;
-            cursor: pointer;
-            z-index: 2;
-            transition: color 0.2s;
-        }
-
-        .modal-close:hover {
-            color: #e50914;
-        }
-
-        .modal-movie-header {
-            display: flex;
-            gap: 20px;
-            align-items: flex-start;
-            margin-bottom: 18px;
-        }
-
-        .modal-movie-poster {
-            width: 140px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px #000a;
-            flex-shrink: 0;
-        }
-
-        .modal-movie-info {
-            flex: 1;
-        }
-
-        .modal-movie-title {
-            font-size: 1.5rem;
-            color: #e50914;
-            margin: 0 0 8px 0;
-        }
-
-        .modal-movie-rating {
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-            color: #f1c40f;
-        }
-
-        .modal-movie-overview {
-            margin-bottom: 16px;
-            font-size: 1rem;
-            color: #ccc;
-        }
-
-        .modal-section-title {
-            font-size: 1.1rem;
-            color: #e50914;
-            margin: 18px 0 8px 0;
-        }
-
-        .modal-reviews {
-            max-height: 120px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-        }
-
-        .modal-review {
-            background: #232323;
-            border-radius: 6px;
-            padding: 8px 10px;
-            margin-bottom: 8px;
-            font-size: 0.97rem;
-        }
-
-        .modal-review-author {
-            font-weight: bold;
-            color: #f1c40f;
-            margin-bottom: 2px;
-            font-size: 0.95em;
-        }
-
-        .modal-trailer {
-            margin-top: 10px;
-            text-align: center;
-        }
-
-        .modal-trailer iframe {
-            width: 100%;
-            max-width: 480px;
-            height: 270px;
-            border-radius: 8px;
-            border: none;
-            background: #000;
-        }
-
-        @keyframes fadeInModal {
-            from {
-                opacity: 0;
-            }
-
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes fadeOutModal {
-            to {
-                opacity: 0;
-                pointer-events: none;
-            }
-        }
-
-        @media (max-width:600px) {
-            .modal-content {
-                padding: 10px 2vw 10px 2vw;
-            }
-
-            .modal-movie-header {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .modal-movie-poster {
-                width: 90vw;
-                max-width: 220px;
-            }
-        }
-    </style>
 </head>
 
 <body>
@@ -459,7 +62,6 @@
 
     <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-    <!-- Modal container (inspirado en peliculas.html) -->
     <div id="movie-modal" class="modal" style="display:none;">
         <div class="modal-content" tabindex="0">
             <button class="modal-close" id="modal-close-btn" aria-label="Cerrar modal">&times;</button>
@@ -467,7 +69,7 @@
         </div>
     </div>
 
-    <script data-cfasync="false" src="/js/tmdb.min.js?v=4-interceptor-agresivo"></script>
+    <script data-cfasync="false" src="/js/tmdb.js?v=4-interceptor-agresivo"></script>
     <script>
         const token = localStorage.getItem('jwt');
     const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
@@ -522,89 +124,234 @@ async function safeFetch(url, options = {}) {
 }
 
 async function loadFavoritos() {
-  let favoritosSeries = [];
-  let favoritosPeliculas = [];
-  try {
-  const resSeries = await fetch(`https://api.ultrafilm.online/favoritos?user_id=${loggedInUser.id}`, {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-    favoritosSeries = await resSeries.json();
-  } catch (e) {
-    favoritosSeries = [];
-  }
-  try {
-  const resPeliculas = await fetch(`https://api.ultrafilm.online/favoritos_peliculas?user_id=${loggedInUser.id}`, {
-      headers: { 'Authorization': 'Bearer ' + token }
-    });
-    favoritosPeliculas = await resPeliculas.json();
-  } catch (e) {
-    favoritosPeliculas = [];
-  }
-  const favoritos = [...favoritosSeries, ...favoritosPeliculas];
-  if (!favoritos.length) {
-    favoritosContainer.innerHTML = '<p style="color:#ccc; text-align:center;">No tienes favoritos.</p>';
-    return;
-  }
-  favoritosContainer.innerHTML = favoritos.map(p => {
-    const titulo = p.title || p.name || 'Título no disponible';
-    const tipo = p.name ? 'serie' : 'pelicula';
-    const poster = p.poster_path ? 'https://image.tmdb.org/t/p/w500' + p.poster_path : 'https://via.placeholder.com/500x750?text=Sin+Imagen';
-    return `
-      <article class="card" tabindex="0" aria-label="Favorito: ${titulo}" data-movie-id="${p.id}" data-type="${tipo}">
-        <div class="card-media"><img src="${poster}" alt="Poster de ${titulo}" /></div>
-        <div class="card-body">
-          <h3 class="card-title">${titulo}</h3>
-          <p class="card-description">${p.overview || 'Sin descripción disponible.'}</p>
-        </div>
-        <div class="card-footer">
-          <button class="remove-fav-btn" data-id="${p.id}" data-tipo="${tipo}" aria-label="Quitar ${titulo} de favoritos">❌ Quitar de favoritos</button>
-        </div>
-      </article>
-    `;
-  }).join('');
-  favoritosContainer.querySelectorAll('.remove-fav-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      const itemId = btn.getAttribute('data-id');
-      const tipo = btn.getAttribute('data-tipo');
-      const card = btn.closest('.card');
-      const titulo = card.querySelector('.card-title').textContent;
-      btn.disabled = true;
-      try {
-        await quitarFavorito(itemId, tipo);
-        showToast(`Eliminaste "${titulo}" de favoritos.`, 'success');
-        card.classList.add('removing');
-        setTimeout(() => card.remove(), 250);
-        if (!favoritosContainer.querySelector('.card')) {
-          favoritosContainer.innerHTML = '<p style="color:#ccc; text-align:center;">No tienes favoritos.</p>';
-        }
-      } catch {
-        btn.disabled = false;
-      }
-    }, { once: true });
-  });
 
-  if (typeof attachCardHandlers === 'function') attachCardHandlers();
+    favoritosContainer.innerHTML = '<div style="text-align:center;padding:20px;color:#ccc;">Cargando favoritos...</div>';
+
+    if (!token || !loggedInUser || !loggedInUser.id) {
+        favoritosContainer.innerHTML = '<p style="color:#ff6b6b; text-align:center;">Error: No estás autenticado.</p>';
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 2000);
+        return;
+    }
+
+    console.log('🔍 User ID:', loggedInUser.id);
+    console.log('🔍 Token:', token ? 'Presente' : 'Faltante');
+
+    let favoritosSeries = [];
+    let favoritosPeliculas = [];
+
+    try {
+        console.log('📡 Haciendo fetch a series favoritas...');
+        const resSeries = await fetch(`https://api.ultrafilm.online/favoritos?user_id=${loggedInUser.id}`, {
+            headers: { 
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            cache: 'no-cache'
+        });
+
+        console.log('📡 Response series status:', resSeries.status);
+
+        if (resSeries.status === 401) {
+            showToast('Sesión expirada. Por favor, inicia sesión nuevamente.', 'error');
+            localStorage.removeItem('jwt');
+            localStorage.removeItem('loggedInUser');
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+            return;
+        }
+
+        if (resSeries.ok) {
+            favoritosSeries = await resSeries.json();
+            console.log('🎬 Series favoritas:', favoritosSeries);
+            console.log('🎬 Tipo de respuesta series:', typeof favoritosSeries);
+            console.log('🎬 Es array?', Array.isArray(favoritosSeries));
+            console.log('🎬 Longitud:', favoritosSeries.length);
+        } else {
+            console.error('❌ Error cargando series favoritas:', resSeries.status);
+            const errorText = await resSeries.text();
+            console.error('❌ Error details:', errorText);
+        }
+    } catch (e) {
+        console.error('❌ Error en fetch de series:', e);
+        favoritosSeries = [];
+    }
+
+    try {
+        console.log('📡 Haciendo fetch a películas favoritas...');
+        const resPeliculas = await fetch(`https://api.ultrafilm.online/favoritos_peliculas?user_id=${loggedInUser.id}`, {
+            headers: { 
+                'Authorization': 'Bearer ' + token,
+                'Content-Type': 'application/json'
+            },
+            cache: 'no-cache'
+        });
+
+        console.log('📡 Response películas status:', resPeliculas.status);
+
+        if (resPeliculas.status === 401) {
+            showToast('Sesión expirada. Por favor, inicia sesión nuevamente.', 'error');
+            localStorage.removeItem('jwt');
+            localStorage.removeItem('loggedInUser');
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 2000);
+            return;
+        }
+
+        if (resPeliculas.ok) {
+            favoritosPeliculas = await resPeliculas.json();
+            console.log('🎬 Películas favoritas:', favoritosPeliculas);
+            console.log('🎬 Tipo de respuesta películas:', typeof favoritosPeliculas);
+            console.log('🎬 Es array?', Array.isArray(favoritosPeliculas));
+            console.log('🎬 Longitud:', favoritosPeliculas.length);
+        } else {
+            console.error('❌ Error cargando películas favoritas:', resPeliculas.status);
+            const errorText = await resPeliculas.text();
+            console.error('❌ Error details:', errorText);
+        }
+    } catch (e) {
+        console.error('❌ Error en fetch de películas:', e);
+        favoritosPeliculas = [];
+    }
+
+    console.log('📊 Total series:', favoritosSeries.length);
+    console.log('📊 Total películas:', favoritosPeliculas.length);
+
+    const favoritos = [...favoritosSeries, ...favoritosPeliculas];
+    console.log('📊 Total favoritos combinados:', favoritos.length);
+
+    if (!favoritos.length) {
+        favoritosContainer.innerHTML = '<p style="color:#ccc; text-align:center;">No tienes favoritos aún.</p>';
+        console.log('ℹ️ No se encontraron favoritos');
+        return;
+    }
+
+    console.log('🎨 Renderizando favoritos...');
+    favoritosContainer.innerHTML = favoritos.map(p => {
+        const titulo = p.title || p.name || 'Título no disponible';
+        const tipo = p.name ? 'serie' : 'pelicula';
+        const poster = p.poster_path ? 'https://image.tmdb.org/t/p/w500' + p.poster_path : 'https://via.placeholder.com/500x750?text=Sin+Imagen';
+
+        console.log(`🎬 Procesando: ${titulo} (${tipo})`);
+
+        return `
+            <article class="card" tabindex="0" aria-label="Favorito: ${titulo}" data-movie-id="${p.id}" data-type="${tipo}">
+                <div class="card-media"><img src="${poster}" alt="Poster de ${titulo}" loading="lazy" /></div>
+                <div class="card-body">
+                    <h3 class="card-title">${titulo}</h3>
+                    <p class="card-description">${p.overview ? (p.overview.slice(0, 120) + '...') : 'Sin descripción disponible.'}</p>
+                </div>
+                <div class="card-footer">
+                    <button class="remove-fav-btn" data-id="${p.id}" data-tipo="${tipo}" aria-label="Quitar ${titulo} de favoritos">❌ Quitar</button>
+                </div>
+            </article>
+        `;
+    }).join('');
+
+    console.log('🎯 Añadiendo event listeners...');
+
+    favoritosContainer.querySelectorAll('.remove-fav-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+
+            const itemId = btn.getAttribute('data-id');
+            const tipo = btn.getAttribute('data-tipo');
+            const card = btn.closest('.card');
+            const titulo = card.querySelector('.card-title').textContent;
+            btn.disabled = true;
+
+            try {
+                await quitarFavorito(itemId, tipo);
+                showToast(`Eliminaste "${titulo}" de favoritos.`, 'success');
+                card.classList.add('removing');
+                setTimeout(() => card.remove(), 250);
+                if (!favoritosContainer.querySelector('.card')) {
+                    favoritosContainer.innerHTML = '<p style="color:#ccc; text-align:center;">No tienes favoritos.</p>';
+                }
+            } catch (error) {
+                btn.disabled = false;
+                showToast('Error al eliminar de favoritos', 'error');
+            }
+        });
+    });
+
+    favoritosContainer.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-fav-btn')) {
+                return;
+            }
+
+            const movieId = card.getAttribute('data-movie-id');
+            const type = card.getAttribute('data-type');
+            if (typeof openMovieModal === 'function') {
+                openMovieModal(movieId, type);
+            }
+        });
+
+        card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const movieId = card.getAttribute('data-movie-id');
+                const type = card.getAttribute('data-type');
+                if (typeof openMovieModal === 'function') {
+                    openMovieModal(movieId, type);
+                }
+            }
+        });
+    });
+
+    console.log('✅ Favoritos cargados correctamente');
 }
 
 async function quitarFavorito(itemId, tipo) {
-  if (tipo === 'serie') {
-  await safeFetch('https://api.ultrafilm.online/favoritos', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ user_id: loggedInUser.id, serie_id: Number(itemId) })
+
+    if (!token || !loggedInUser || !loggedInUser.id) {
+        showToast('Error de autenticación', 'error');
+        throw new Error('No autenticado');
+    }
+
+    const endpoint = tipo === 'serie' 
+        ? 'https://api.ultrafilm.online/favoritos' 
+        : 'https://api.ultrafilm.online/favoritos_peliculas';
+
+    const body = tipo === 'serie' 
+        ? { user_id: loggedInUser.id, serie_id: Number(itemId) }
+        : { user_id: loggedInUser.id, pelicula_id: Number(itemId) };
+
+    const response = await fetch(endpoint, {
+        method: 'DELETE',
+        headers: { 
+            'Content-Type': 'application/json', 
+            'Authorization': 'Bearer ' + token 
+        },
+        body: JSON.stringify(body),
+        cache: 'no-store'
     });
-  } else {
-  await safeFetch('https://api.ultrafilm.online/favoritos_peliculas', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ user_id: loggedInUser.id, pelicula_id: Number(itemId) })
-    });
-  }
+
+    if (response.status === 401) {
+        showToast('Sesión expirada', 'error');
+        localStorage.removeItem('jwt');
+        localStorage.removeItem('loggedInUser');
+        setTimeout(() => {
+            window.location.href = 'login.html';
+        }, 2000);
+        throw new Error('Sesión expirada');
+    }
+
+    if (!response.ok) {
+        throw new Error('Error al eliminar favorito');
+    }
+
+    return await response.json();
 }
 
 loadFavoritos();
 
-    const IMG_URL = 'https://image.tmdb.org/t/p/w500';
+const IMG_URL = 'https://image.tmdb.org/t/p/w500';
 
 const modal = document.getElementById('movie-modal');
 const modalBody = document.getElementById('modal-body');

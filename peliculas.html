@@ -1,72 +1,882 @@
-<!doctype html>
+<!DOCTYPE html>
 
 <html lang="es">
 
 <head>
 
-  <meta charset="utf-8">
+  <meta charset="UTF-8" />
 
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Descubre y organiza tu catálogo personal de películas en UltraFilm. Encuentra tus películas favoritas, crea listas y disfruta de recomendaciones personalizadas.">
+  <title>Películas - UltraFilm</title>
 
-  <title>Sitio en mantenimiento — UltraFilm</title>
-
-  <link rel="stylesheet" href="/style.css">
-
+  <link rel="manifest" href="manifest.json">
   <style>
 
-    body{display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:linear-gradient(180deg,#071029,#0b1220);color:#fff;font-family:Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #0a0a0a;
+      color: #eee;
+      min-height: 100vh;
+    }
 
-    .card{max-width:720px;padding:28px;border-radius:12px;background:rgba(0,0,0,0.45);box-shadow:0 8px 30px rgba(0,0,0,0.6);text-align:center}
+    .has-header {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
 
-    h1{margin:0 0 8px;font-size:28px;color:#e50914}
+    header {
+      background: rgba(28, 28, 28, 0.9);
+      padding: 20px;
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 800;
+      border-bottom: 1px solid rgba(229, 9, 20, 0.2);
+    }
 
-    p{color:#cbd5e1}
+    header h1 {
+      background: linear-gradient(135deg, #e50914 0%, #ff6b6b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
 
-    .actions{margin-top:18px}
+    nav {
+      background: rgba(34, 34, 34, 0.8);
+      padding: 15px 20px;
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
 
-    a.button{display:inline-block;padding:10px 16px;border-radius:8px;background:#e50914;color:#fff;text-decoration:none}
+    nav a {
+      color: #eee;
+      text-decoration: none;
+      padding: 10px 18px;
+      border-radius: 10px;
+      background: rgba(51, 51, 51, 0.6);
+      transition: all 0.3s ease;
+    }
 
-    a.alt{margin-left:8px;color:#9aa4b2}
+    main {
+      flex-grow: 1;
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
 
+    #peliculas-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 25px;
+      min-height: 400px;
+    }
+
+    .loading-placeholder {
+      background: rgba(28, 28, 28, 0.6);
+      border-radius: 16px;
+      min-height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ccc;
+    }
   </style>
 
+  <!-- ✅ CSS COMPLETO CARGADO ASÍNCRONO -->
+  <link rel="stylesheet" href="style.css" media="print" onload="this.media='all'">
+
+  <!-- Fallback para navegadores sin JavaScript -->
+  <noscript>
+    <link rel="stylesheet" href="style.css">
+  </noscript>
+</head>
+<meta name="theme-color" content="#121212">
+
+<link rel="preconnect" href="https://api.ultrafilm.online">
+<link rel="preconnect" href="https://image.tmdb.org">
+<link rel="preconnect" href="https://www.themoviedb.org">
+<link rel="dns-prefetch" href="https://api.ultrafilm.online">
+<link rel="dns-prefetch" href="https://image.tmdb.org">
+
+<script>
+  if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js');
+      });
+    }
+</script>
 </head>
 
 <body>
 
-  <div class="card">
+  <header>🎬 Películas Populares</header>
 
-    <h1>Estamos en mantenimiento</h1>
+  <nav>
 
-    <p>Lo sentimos — estamos realizando tareas de mantenimiento y mejorando el sitio. Volveremos en breve.</p>
+    <a href="dash.html">Inicio</a>
 
-    <p id="maint-message" style="color:#9aa4b2;margin-top:8px"></p>
+    <a href="peliculas.html" aria-current="page">Películas</a>
 
-    <div class="actions">
+    <a href="series.html">Series</a>
 
-      <a class="button" href="/">Ir al inicio</a>
+    <a href="favoritos.html">Favoritos</a>
 
-      <a class="alt" href="/login.html">Iniciar sesión (si eres admin)</a>
+    <a href="guardados.html" aria-current="page" style="background:#333;color:#eee;font-weight:bold;">Ver más
+      tarde</a>
+
+    <button id="logout-btn" class="btn-logout">Cerrar sesión</button>
+
+  </nav>
+
+  <main>
+
+    <input type="text" id="search-input" placeholder="Buscar películas..." aria-label="Buscar películas por título" style="width:100%;max-width:300px;font-size:1rem;padding:8px 12px;margin-bottom:25px;border-radius:6px;border:none;background-color:#222;color:#eee;" />
+
+    <select id="genre-select" aria-label="Filtrar por género">
+
+      <option value="0">Todos los géneros</option>
+
+    </select>
+
+    <select id="sort-select" aria-label="Ordenar por" style="width:100%;max-width:180px;font-size:1rem;padding:8px 12px;margin-bottom:25px;border-radius:6px;border:none;background-color:#222;color:#eee;margin-left:10px;">
+
+      <option value="popularity.desc">Más populares</option>
+
+      <option value="popularity.asc">Menos populares</option>
+
+      <option value="release_date.desc">Más nuevas</option>
+
+      <option value="release_date.asc">Más antiguas</option>
+
+      <option value="vote_average.desc">Mejor puntuadas</option>
+
+      <option value="vote_average.asc">Peor puntuadas</option>
+
+      <option value="original_title.asc">Título (A-Z)</option>
+
+      <option value="original_title.desc">Título (Z-A)</option>
+
+    </select>
+
+    <div id="peliculas-container" aria-live="polite" aria-relevant="additions"></div>
+
+    <div class="pagination">
+
+      <button id="prev-page" disabled>Anterior</button>
+
+      <span id="page-indicator">Página 1</span>
+
+      <button id="next-page">Siguiente</button>
+
+    </div>
+
+  </main>
+
+  <footer>© 2025 UltraFilm Cine & Series. Todos los derechos reservados.</footer>
+
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <div id="movie-modal" class="modal" style="display:none;">
+
+    <div class="modal-content" tabindex="0">
+
+      <button class="modal-close" id="modal-close-btn" aria-label="Cerrar modal">&times;</button>
+
+      <div id="modal-body">
+
+      </div>
 
     </div>
 
   </div>
+  <div id="lcp-container" style="position:absolute; opacity:0; pointer-events:none; z-index:-1;">
+    <img id="lcp-image"
+         loading="eager"
+         fetchpriority="high"
+         alt="UltraFilm - Catálogo de Películas"
+         style="width:300px; height:450px;"
+         src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMWExYTFhIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2U1MDkxNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPlVsdHJhRmlsbTwvdGV4dD48L3N2Zz4=" />
+  </div>
 
+  <script data-cfasync="false" src="/js/tmdb.js?v=4-interceptor-agresivo" defer></script>
   <script>
 
-    try{
+function initApp() {
 
-      const params = new URLSearchParams(location.search);
+    if (!document.getElementById('toast-container')) {
+      const container = document.createElement('div');
+      container.id = 'toast-container';
+      container.setAttribute('aria-live', 'polite');
+      container.setAttribute('aria-atomic', 'true');
+      document.body.appendChild(container);
+    }
 
-      const msg = params.get('message');
+    const IMG_URL_SMALL = 'https://image.tmdb.org/t/p/w300';
+    const IMG_URL_MEDIUM = 'https://image.tmdb.org/t/p/w400';  
+    const IMG_URL_LARGE = 'https://image.tmdb.org/t/p/w500';
+    const IMG_URL_ORIGINAL = 'https://image.tmdb.org/t/p/original';
+    const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjQ1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMjIyIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iI2NjYyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
 
-      if(msg){ document.getElementById('maint-message').textContent = msg; }
+    function getOptimizedImageUrl(posterPath, size = 'small') {
+        if (!posterPath) return PLACEHOLDER_IMAGE;
 
-    }catch(e){}
+        const sizes = {
+            'tiny': 'w154',
+            'small': 'w185', 
+            'medium': 'w342',
+            'large': 'w500',
+            'original': 'original'
+        };
+
+        return `https://image.tmdb.org/t/p/${sizes[size]}${posterPath}`;
+    }
+
+    function updateLCPImage(firstMovie) {
+        const lcpImage = document.getElementById('lcp-image');
+        if (lcpImage && firstMovie && firstMovie.poster_path) {
+            lcpImage.src = getOptimizedImageUrl(firstMovie.poster_path, 'small');
+            lcpImage.alt = `Poster de ${firstMovie.title}`;
+
+            setTimeout(() => {
+                const lcpContainer = document.getElementById('lcp-container');
+                if (lcpContainer) {
+                    lcpContainer.remove();
+                }
+            }, 3000);
+        }
+    }
+
+    function initLazyImages() {
+        const images = document.querySelectorAll('.lazy-image');
+
+        images.forEach(img => {
+            img.addEventListener('load', function() {
+                this.classList.add('loaded');
+            });
+
+            if (img.complete) {
+                img.classList.add('loaded');
+            }
+        });
+    }
+
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentGenre = 0;
+    let currentSearchQuery = '';
+    let currentSort = 'popularity.desc';
+    let peliculas = [];
+
+    const genreSelect = document.getElementById('genre-select');
+    const sortSelect = document.getElementById('sort-select');
+    const peliculasContainer = document.getElementById('peliculas-container');
+    const searchInput = document.getElementById('search-input');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+    const pageIndicator = document.getElementById('page-indicator');
+
+    const token = localStorage.getItem('jwt');
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+
+    if (!token) {
+      alert('No hay JWT en localStorage');
+      localStorage.removeItem('jwt');
+      localStorage.removeItem('loggedInUser');
+      window.location.href = 'login.html';
+    }
+
+    if (!loggedInUser || !loggedInUser.id) {
+      alert('No hay usuario en localStorage');
+      localStorage.removeItem('jwt');
+      localStorage.removeItem('loggedInUser');
+      window.location.href = 'login.html';
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('loggedInUser');
+      window.location.href = 'index.html';
+    });
+
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        currentSearchQuery = searchInput.value.trim();
+        currentPage = 1; 
+        fetchMovies();
+      }, 300);
+    });
+
+    prevPageBtn.addEventListener('click', () => {
+      if (currentPage > 1) {
+        currentPage--;
+        fetchMovies();
+      }
+    });
+
+    nextPageBtn.addEventListener('click', () => {
+      if (currentPage < totalPages) {
+        currentPage++;
+        fetchMovies();
+      }
+    });
+
+    genreSelect.addEventListener('change', () => {
+      currentGenre = parseInt(genreSelect.value);
+      currentPage = 1; 
+      fetchMovies();
+    });
+
+    sortSelect.addEventListener('change', () => {
+      currentSort = sortSelect.value;
+      currentPage = 1;
+      fetchMovies();
+    });
+
+    async function fetchGenres() {
+      try {
+        if (typeof window.tmdbFetch !== 'function') {
+          console.error('tmdbFetch no está disponible. Verifica que tmdb.js se esté cargando correctamente.');
+          return;
+        }
+
+        const data = await window.tmdbFetch('/genre/movie/list', { language: 'es-ES' });
+        genres = data.genres || [];
+        populateGenreSelect();
+      } catch (e) {
+        console.error('Error cargando géneros:', e);
+      }
+    }
+
+    function populateGenreSelect() {
+      genres.forEach(genre => {
+        const option = document.createElement('option');
+        option.value = genre.id;
+        option.textContent = genre.name;
+        genreSelect.appendChild(option);
+      });
+    }
+
+    async function fetchMovies() {
+      try {
+        if (typeof window.tmdbFetch !== 'function') {
+          console.error('tmdbFetch no está disponible. Verifica que tmdb.js se esté cargando correctamente.');
+          showToast('Error: tmdbFetch no disponible', 'error');
+          return;
+        }
+
+        let data;
+        if (currentSearchQuery) {
+          data = await window.tmdbFetch('/search/movie', { 
+            language: 'es-ES', 
+            query: currentSearchQuery, 
+            page: currentPage 
+          });
+
+          let results = data.results || [];
+          results = sortSearchResults(results, currentSort);
+          peliculas = results;
+          totalPages = data.total_pages || 1;
+
+        } else if (currentGenre && currentGenre != 0) {
+          data = await window.tmdbFetch('/discover/movie', {
+            language: 'es-ES',
+            sort_by: currentSort,
+            page: currentPage,
+            with_genres: currentGenre
+          });
+
+          peliculas = data.results || [];
+          totalPages = data.total_pages || 1;
+
+        } else {
+          data = await window.tmdbFetch('/discover/movie', {
+            language: 'es-ES',
+            sort_by: currentSort,
+            page: currentPage
+          });
+
+          peliculas = data.results || [];
+          totalPages = data.total_pages || 1;
+        }
+
+        renderMovies();
+        updatePaginationControls();
+      } catch (e) {
+        console.error('Error cargando películas:', e);
+        showToast('Error al cargar películas', 'error');
+      }
+    }
+
+    function sortSearchResults(results, sortBy) {
+      const [field, dir] = sortBy.split('.');
+      return results.slice().sort((a, b) => {
+        let va, vb;
+        switch (field) {
+          case 'popularity':
+            va = a.popularity; vb = b.popularity; break;
+          case 'release_date':
+            va = a.release_date || ''; vb = b.release_date || ''; break;
+          case 'vote_average':
+            va = a.vote_average; vb = b.vote_average; break;
+          case 'original_title':
+            va = (a.original_title || '').toLowerCase(); vb = (b.original_title || '').toLowerCase(); break;
+          default:
+            va = 0; vb = 0;
+        }
+        if (va < vb) return dir === 'asc' ? -1 : 1;
+        if (va > vb) return dir === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    let favoritos = [];
+    let favoritosCargados = false;
+
+    async function fetchFavoritos(force = false) {
+      if (!loggedInUser || !loggedInUser.id) {
+        favoritos = [];
+        return favoritos;
+      }
+
+      if (favoritosCargados && !force) return favoritos;
+
+      try {
+        const res = await fetch(`https://api.ultrafilm.online/favoritos_peliculas?user_id=${loggedInUser.id}`, {
+          headers: { 'Authorization': 'Bearer ' + token },
+          cache: 'no-cache' 
+        });
+
+        if (!res.ok) throw new Error('Error cargando favoritos');
+        favoritos = await res.json();
+        favoritosCargados = true;
+        console.log('Favoritos cargados:', favoritos.length);
+      } catch (e) {
+        console.error('Error fetchFavoritos:', e);
+        favoritos = [];
+      }
+    }
+
+    function esFavorito(id) {
+      return favoritos.some(fav => fav.id === id);
+    }
+
+    async function toggleFavorito(pelicula) {
+      if (!loggedInUser || !loggedInUser.id) return;
+
+      const esActualmenteFavorito = esFavorito(pelicula.id);
+      const fav = favoritos.find(f => f.id === pelicula.id);
+
+      try {
+        if (esActualmenteFavorito && fav) {
+          const response = await safeFetch('https://api.ultrafilm.online/favoritos_peliculas', {
+            method: 'DELETE',
+            headers: { 
+              'Content-Type': 'application/json', 
+              'Authorization': 'Bearer ' + token 
+            },
+            body: JSON.stringify({ 
+              user_id: loggedInUser.id, 
+              pelicula_id: pelicula.id 
+            })
+          });
+
+          favoritos = favoritos.filter(f => f.id !== pelicula.id);
+          showToast(`Eliminaste "${pelicula.title}" de favoritos.`, 'error');
+
+        } else {
+          const response = await safeFetch('https://api.ultrafilm.online/favoritos_peliculas', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json', 
+              'Authorization': 'Bearer ' + token 
+            },
+            body: JSON.stringify({ 
+              user_id: loggedInUser.id, 
+              pelicula: pelicula 
+            })
+          });
+
+          favoritos.push(pelicula);
+          showToast(`Agregaste "${pelicula.title}" a favoritos.`, 'success');
+        }
+
+        favoritosCargados = true;
+        renderMovies();
+
+      } catch (error) {
+        console.error('Error en toggleFavorito:', error);
+        favoritosCargados = false;
+        await fetchFavoritos(true);
+        renderMovies();
+      }
+    }
+
+    let guardados = [];
+    let guardadosCargados = false;
+
+    async function fetchGuardados(force = false) {
+      if (!loggedInUser || !loggedInUser.id) {
+        guardados = [];
+        return guardados;
+      }
+
+      if (guardadosCargados && !force) return guardados;
+
+      try {
+        const res = await fetch(`https://api.ultrafilm.online/guardados_peliculas?user_id=${loggedInUser.id}`, {
+          headers: { 'Authorization': 'Bearer ' + token },
+          cache: 'no-cache' 
+        });
+
+        if (!res.ok) throw new Error('Error cargando guardados');
+        guardados = await res.json();
+        guardadosCargados = true;
+        console.log('Guardados cargados:', guardados.length);
+      } catch (e) {
+        console.error('Error fetchGuardados:', e);
+        guardados = [];
+      }
+    }
+
+    function estaGuardado(id) {
+      return guardados.some(g => g.id === id);
+    }
+
+    async function toggleGuardado(pelicula) {
+      if (!loggedInUser || !loggedInUser.id) return;
+
+      const esActualmenteGuardado = estaGuardado(pelicula.id);
+      const guardado = guardados.find(g => g.id === pelicula.id);
+
+      try {
+        if (esActualmenteGuardado && guardado) {
+          const response = await safeFetch('https://api.ultrafilm.online/guardados_peliculas', {
+            method: 'DELETE',
+            headers: { 
+              'Content-Type': 'application/json', 
+              'Authorization': 'Bearer ' + token 
+            },
+            body: JSON.stringify({ 
+              user_id: loggedInUser.id, 
+              pelicula_id: pelicula.id 
+            })
+          });
+
+          guardados = guardados.filter(g => g.id !== pelicula.id);
+          showToast(`Eliminaste "${pelicula.title}" de ver más tarde.`, 'error');
+
+        } else {
+          const response = await safeFetch('https://api.ultrafilm.online/guardados_peliculas', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json', 
+              'Authorization': 'Bearer ' + token 
+            },
+            body: JSON.stringify({ 
+              user_id: loggedInUser.id, 
+              pelicula: pelicula 
+            })
+          });
+
+          guardados.push(pelicula);
+          showToast(`Guardaste "${pelicula.title}" para ver más tarde.`, 'success');
+        }
+
+        guardadosCargados = true;
+        renderMovies();
+
+      } catch (error) {
+        console.error('Error en toggleGuardado:', error);
+        guardadosCargados = false;
+        await fetchGuardados(true);
+        renderMovies();
+      }
+    }
+
+    async function renderMovies() {
+        if (!peliculas.length) {
+            peliculasContainer.innerHTML = '<p style="color:#ccc; text-align:center;">No se encontraron películas.</p>';
+            return;
+        }
+        updateLCPImage(peliculas[0]);
+        renderMovieCardsImmediately();
+        initLazyImages();
+        loadAndUpdateStates();
+    }
+
+    function renderMovieCardsImmediately() {
+        peliculasContainer.innerHTML = peliculas.map((p, index) => {
+            const isFirstImage = index === 0;
+            const loadingType = isFirstImage ? 'eager' : 'lazy';
+            const fetchPriority = isFirstImage ? 'high' : 'auto';
+            const additionalStyle = isFirstImage ? 'style="opacity:1;"' : '';
+            const additionalClass = isFirstImage ? 'lcp-image' : '';
+
+            return `
+              <article class="card" tabindex="0" aria-label="Película: ${p.title}" data-movie-id="${p.id}">
+                <button class="fav-star-btn" aria-pressed="false" aria-label="Agregar a favoritos" data-id="${p.id}">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#eee" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path stroke-linejoin="round" stroke-linecap="round" d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                  </svg>
+                </button>
+                <button class="bookmark-btn" aria-pressed="false" aria-label="Guardar para ver más tarde" data-id="${p.id}" tabindex="0" style="position:absolute;top:10px;left:10px;background:transparent;border:none;cursor:pointer;padding:0;z-index:2;display:flex;align-items:center;justify-content:center;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#eee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" fill="none"/>
+                  </svg>
+                </button>
+                <img loading="${loadingType}"
+                     fetchpriority="${fetchPriority}"
+                     src="${getOptimizedImageUrl(p.poster_path, 'small')}"
+                     alt="Poster de ${p.title}"
+                     class="lazy-image ${additionalClass}"
+                     ${additionalStyle}
+                     width="185" 
+                     height="278" />
+                <div class="card-content">
+                  <h3 class="card-title">${p.title}</h3>
+                  <p class="card-description">${p.overview ? p.overview.slice(0, 100) + (p.overview.length > 100 ? '...' : '') : 'Sin descripción.'}</p>
+                </div>
+              </article>
+            `;
+        }).join('');
+
+        document.querySelectorAll('.fav-star-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const movieId = parseInt(btn.getAttribute('data-id'));
+                const movie = peliculas.find(p => p.id === movieId);
+                if (movie) toggleFavorito(movie);
+            });
+        });
+
+        document.querySelectorAll('.bookmark-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const movieId = parseInt(btn.getAttribute('data-id'));
+                const movie = peliculas.find(p => p.id === movieId);
+                if (movie) toggleGuardado(movie);
+            });
+        });
+
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (e.target.closest('.fav-star-btn') || e.target.closest('.bookmark-btn')) return;
+                const movieId = this.getAttribute('data-movie-id');
+                openMovieModal(movieId);
+            });
+
+            card.addEventListener('keydown', function(e) {
+                if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.fav-star-btn') && !e.target.closest('.bookmark-btn')) {
+                    e.preventDefault();
+                    const movieId = this.getAttribute('data-movie-id');
+                    openMovieModal(movieId);
+                }
+            });
+        });
+    }
+
+    async function loadAndUpdateStates() {
+        try {
+            await Promise.all([fetchFavoritos(), fetchGuardados()]);
+
+            document.querySelectorAll('.fav-star-btn').forEach(btn => {
+                const movieId = parseInt(btn.getAttribute('data-id'));
+                const esFav = esFavorito(movieId);
+
+                if (esFav) {
+                    btn.classList.add('favorito');
+                    btn.setAttribute('aria-pressed', 'true');
+                    btn.querySelector('svg').setAttribute('fill', '#f1c40f');
+                    btn.querySelector('svg').setAttribute('stroke', '#f1c40f');
+                    btn.setAttribute('aria-label', 'Eliminar de favoritos');
+                }
+            });
+
+            document.querySelectorAll('.bookmark-btn').forEach(btn => {
+                const movieId = parseInt(btn.getAttribute('data-id'));
+                const estaGuard = estaGuardado(movieId);
+
+                if (estaGuard) {
+                    btn.classList.add('guardado');
+                    btn.setAttribute('aria-pressed', 'true');
+                    btn.querySelector('svg').setAttribute('stroke', '#00b3ff');
+                    btn.querySelector('path').setAttribute('fill', '#00b3ff');
+                    btn.setAttribute('aria-label', 'Quitar de ver más tarde');
+                }
+            });
+
+        } catch (error) {
+            console.error('Error actualizando estados:', error);
+        }
+    }
+
+    function updatePaginationControls() {
+        pageIndicator.textContent = `Página ${currentPage} de ${totalPages}`;
+        prevPageBtn.disabled = currentPage <= 1;
+        nextPageBtn.disabled = currentPage >= totalPages;
+    }
+
+    function showToast(message, type = 'info', duration = 3500) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+            toast.classList.add('hide');
+            toast.addEventListener('transitionend', () => toast.remove());
+        }, duration);
+    }
+
+    async function safeFetch(url, options = {}) {
+        options.headers = options.headers || {};
+        options.headers['Authorization'] = 'Bearer ' + token;
+        try {
+            const res = await fetch(url, options);
+            if (!res.ok) {
+                let errMsg = `Error ${res.status}`;
+                try {
+                    const data = await res.json();
+                    errMsg = data.error || errMsg;
+                } catch {}
+                throw new Error(errMsg);
+            }
+            return await res.json();
+        } catch (err) {
+            showToast(err.message || 'Error de conexión con el servidor.', 'error');
+            throw err;
+        }
+    }
+
+    const modal = document.getElementById('movie-modal');
+    const modalBody = document.getElementById('modal-body');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
+
+    function openMovieModal(movieId) {
+        showMovieDetails(movieId);
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+            modal.querySelector('.modal-content').focus();
+        }, 100);
+    }
+
+    function closeMovieModal() {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        modalBody.innerHTML = '';
+    }
+
+    modalCloseBtn.addEventListener('click', closeMovieModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeMovieModal();
+    });
+    document.addEventListener('keydown', (e) => {
+        if (modal.style.display === 'flex' && e.key === 'Escape') closeMovieModal();
+    });
+
+    async function showMovieDetails(movieId) {
+        modalBody.innerHTML = '<div style="text-align:center;padding:40px 0;">Cargando...</div>';
+        try {
+            const [details, reviewsData, videosData] = await Promise.all([
+                window.tmdbFetch(`/movie/${movieId}`, { language: 'es-ES' }),
+                window.tmdbFetch(`/movie/${movieId}/reviews`, { language: 'es-ES', page: 1 }),
+                window.tmdbFetch(`/movie/${movieId}/videos`, { language: 'es-ES' })
+            ]);
+
+            let trailer = null;
+            if (videosData.results && videosData.results.length) {
+                trailer = videosData.results.find(v => v.type === 'Trailer' && v.site === 'YouTube') ||
+                        videosData.results.find(v => v.site === 'YouTube');
+            }
+
+            const reviews = (reviewsData.results || []).slice(0, 4);
+
+            modalBody.innerHTML = `
+              <div class="modal-movie-header">
+                <img class="modal-movie-poster" 
+                     src="${getOptimizedImageUrl(details.poster_path, 'large')}" 
+                     alt="Poster de ${details.title}" 
+                     loading="eager" />
+                <div class="modal-movie-info">
+                  <h2 class="modal-movie-title">${details.title}</h2>
+                  <div class="modal-movie-rating">⭐ ${details.vote_average ? details.vote_average.toFixed(1) : 'N/A'} / 10 (${details.vote_count || 0} votos)</div>
+                  <div class="modal-movie-overview">${details.overview || 'Sin descripción.'}</div>
+                  <div><b>Géneros:</b> ${details.genres && details.genres.length ? details.genres.map(g => g.name).join(', ') : 'N/A'}</div>
+                  <div><b>Fecha de estreno:</b> ${details.release_date || 'N/A'}</div>
+                  <div><b>Duración:</b> ${details.runtime ? details.runtime + ' min' : 'N/A'}</div>
+                  <div style="margin-top:10px;">
+                    <b>Ver más:</b>
+                    <a href="https://www.themoviedb.org/movie/${details.id}" target="_blank" rel="noopener" style="color:#00b3ff;">TMDB</a>
+                    ${details.homepage ? `| <a href="${details.homepage}" target="_blank" rel="noopener" style="color:#00ff99;">Sitio Oficial</a>` : ''}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="modal-section-title">Reseñas</div>
+                <div class="modal-reviews">
+                  ${reviews.length ? reviews.map(r => `
+                    <div class="modal-review">
+                      <div class="modal-review-author">${r.author}</div>
+                      <div>${r.content.length > 300 ? r.content.slice(0, 300) + '...' : r.content}</div>
+                    </div>
+                  `).join('') : '<div style="color:#aaa;">No hay reseñas disponibles.</div>'}
+                </div>
+              </div>
+              <div>
+                <div class="modal-section-title">Trailer</div>
+                <div class="modal-trailer">
+                  ${trailer ? `<iframe src="https://www.youtube.com/embed/${trailer.key}" allowfullscreen title="Trailer"></iframe>` : '<div style="color:#aaa;">No hay trailer disponible.</div>'}
+                </div>
+              </div>
+            `;
+        } catch (e) {
+            modalBody.innerHTML = '<div style="color:#e50914;text-align:center;padding:40px 0;">Error al cargar detalles.</div>';
+        }
+    }
+
+    fetchGenres().then(async () => {
+        await fetchMovies();
+    });
+}
+
+if (window._tmdbLoaded && typeof window.tmdbFetch === 'function') {
+
+    console.log('✅ tmdbFetch disponible, iniciando app...');
+    initApp();
+} else {
+
+    console.log('⏳ Esperando a tmdb.js...');
+
+    const waitForTMDb = () => {
+        if (window._tmdbLoaded && typeof window.tmdbFetch === 'function') {
+            console.log('✅ tmdb.js cargado, iniciando app');
+            initApp();
+        } else {
+            setTimeout(waitForTMDb, 50);
+        }
+    };
+    waitForTMDb();
+
+    setTimeout(() => {
+        if (!window._tmdbLoaded) {
+            console.error('❌ tmdb.js no se cargó después de 5 segundos');
+            document.getElementById('peliculas-container').innerHTML = 
+                '<p style="color:#e50914; text-align:center;">Error: No se pudo cargar el catálogo. Recarga la página.</p>';
+        }
+    }, 5000);
+}
 
   </script>
 
 </body>
 
 </html>
-

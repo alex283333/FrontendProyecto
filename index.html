@@ -1,175 +1,323 @@
-<!DOCTYPE html>
-
-<html lang="es">
-
-<head>
-
-  <meta charset="UTF-8" />
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
-  <title>Inicio | UltraFilm</title>
-
-  <link rel="stylesheet" href="style.css">
-
-  <link rel="manifest" href="manifest.json">
-
-  <meta name="theme-color" content="#121212">
-
-  <style>
-
-    body {
-
-      background-color: #121212;
-
-      color: #fff;
-
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-
-      display: flex;
-
-      align-items: center;
-
-      justify-content: center;
-
-      height: 100vh;
-
-      margin: 0;
-
-    }
-
-
-
-    .container {
-
-      text-align: center;
-
-      background-color: #1e1e1e;
-
-      padding: 40px;
-
-      border-radius: 12px;
-
-      box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
-
-      width: 90%;
-
-      max-width: 400px;
-
-    }
-
-
-
-    h1 {
-
-      margin-bottom: 20px;
-
-      color: #e50914;
-
-    }
-
-
-
-    p {
-
-      margin-bottom: 30px;
-
-      color: #ccc;
-
-    }
-
-
-
-    .btn {
-
-      display: block;
-
-      width: 100%;
-
-      margin: 10px 0;
-
-      padding: 12px;
-
-      background-color: #e50914;
-
-      color: #fff;
-
-      font-weight: bold;
-
-      border: none;
-
-      border-radius: 6px;
-
-      cursor: pointer;
-
-      font-size: 16px;
-
-      transition: background 0.3s ease;
-
-      text-decoration: none;
-
-    }
-
-
-
-    .btn:hover {
-
-      background-color: #b20710;
-
-    }
-
-  </style>
-
-
-
-  <script>
-
-    
-
-    if (localStorage.getItem("usuarioActual")) {
-
-      window.location.href = "dash.html";
-
-    }
-
-
-
-    if ('serviceWorker' in navigator) {
-
-      window.addEventListener('load', () => {
-
-        navigator.serviceWorker.register('sw.js');
-
-      });
-
-    }
-
-  </script>
-
-
-
-</head>
-
-<body>
-
-
-
-  <div class="container">
-
-    <h1>🎬 Bienvenido</h1>
-
-  <p>Accede a tus Peliculas o Series favoritas.</p>
-
-    <a class="btn" href="login.html">Iniciar Sesión</a>
-
-    <a class="btn" href="register.html">Registrarse</a>
-
-  </div>
-
-
-
-  <script src="/js/maintenance.js" defer></script>
-</body>
-
-</html>
-
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Inicio | UltraFilm</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a0a0f">
+    <link rel="stylesheet" href="style.css">
+    <meta name="description" content="UltraFilm - Tu catálogo personalizado de películas y series. Organiza, descubre y disfruta de tu colección de entretenimiento favorita.">
+    <script>
+        if (localStorage.getItem("usuarioActual")) {
+            window.location.href = "dash.html";
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
+    </script>
+</head>
+<body>
+
+    <div id="custom-cursor" class="cursor"></div>
+    <div id="cursor-follower" class="cursor-follower"></div>
+
+    <div id="particles-bg"></div>
+
+    <div class="container">
+        <div class="logo-container">
+            <div class="logo">🎬</div>
+            <h1 class="title-gradient">UltraFilm</h1>
+        </div>
+
+        <h2 class="subtitle">Tu catálogo personalizado de películas y series</h2>
+        <p class="description">Accede para descubrir, organizar y disfrutar de tu colección personal de entretenimiento</p>
+
+        <div class="action-buttons">
+            <a class="btn btn-primary" href="login.html">
+                <span class="btn-text">Iniciar Sesión</span>
+                <span class="btn-icon">→</span>
+            </a>
+            <a class="btn btn-secondary" href="register.html">
+                <span class="btn-text">Crear Cuenta</span>
+                <span class="btn-icon">+</span>
+            </a>
+        </div>
+    </div>
+
+    <script src="/js/maintenance.js" defer></script>
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const particlesBg = document.getElementById('particles-bg');
+            const particleCount = 30;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+
+                const posX = Math.random() * 100;
+                const posY = Math.random() * 100;
+
+                const size = Math.random() * 4 + 1;
+
+                const duration = Math.random() * 20 + 10;
+                const delay = Math.random() * 5;
+
+                particle.style.cssText = `
+                    left: ${posX}%;
+                    top: ${posY}%;
+                    width: ${size}px;
+                    height: ${size}px;
+                    animation-duration: ${duration}s;
+                    animation-delay: ${delay}s;
+                `;
+
+                particlesBg.appendChild(particle);
+            }
+
+            const cursor = document.getElementById('custom-cursor');
+            const follower = document.getElementById('cursor-follower');
+
+            document.addEventListener('mousemove', (e) => {
+
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+
+                setTimeout(() => {
+                    follower.style.left = e.clientX + 'px';
+                    follower.style.top = e.clientY + 'px';
+                }, 50);
+            });
+
+            const interactiveElements = document.querySelectorAll('a, button, .btn');
+
+            interactiveElements.forEach(element => {
+                element.addEventListener('mouseenter', () => {
+                    cursor.classList.add('hover');
+                    follower.classList.add('hover');
+                });
+
+                element.addEventListener('mouseleave', () => {
+                    cursor.classList.remove('hover');
+                    follower.classList.remove('hover');
+                });
+            });
+        });
+    </script>
+
+    <style>
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+            cursor: none; 
+        }
+
+        .cursor {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            background: #e50914;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+            mix-blend-mode: difference;
+        }
+
+        .cursor-follower {
+            position: fixed;
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(229, 9, 20, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transition: all 0.2s ease-out;
+            mix-blend-mode: difference;
+        }
+
+        .cursor.hover,
+        .cursor-follower.hover {
+            transform: scale(1.5);
+            background: #ff1a1a;
+            border-color: rgba(255, 26, 26, 0.8);
+        }
+
+        #particles-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(229, 9, 20, 0.4);
+            border-radius: 50%;
+            animation: floatParticle linear infinite;
+        }
+
+        @keyframes floatParticle {
+            0% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(20px);
+                opacity: 0;
+            }
+        }
+
+        .container {
+            max-width: 500px;
+            padding: 50px 40px;
+            text-align: center;
+            animation: fadeInUp 0.8s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-container {
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 10px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .title-gradient {
+            font-size: 2.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #e50914 0%, #ff6b6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+            margin: 0;
+        }
+
+        .subtitle {
+            font-size: 1.4rem;
+            color: #fff;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .description {
+            color: #ccc;
+            margin-bottom: 40px;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: none; 
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #e50914 0%, #b20710 100%);
+            color: #fff;
+            box-shadow: 0 8px 25px rgba(229, 9, 20, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ccc;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(229, 9, 20, 0.4);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #ff1a1a 0%, #d40000 100%);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(229, 9, 20, 0.3);
+            color: #fff;
+        }
+
+        .btn-text {
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .btn-icon {
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 25px;
+            }
+
+            .logo {
+                font-size: 3.5rem;
+            }
+
+            .title-gradient {
+                font-size: 2.2rem;
+            }
+
+            .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .description {
+                font-size: 1rem;
+            }
+
+            body {
+                cursor: auto;
+            }
+
+            .cursor,
+            .cursor-follower {
+                display: none;
+            }
+        }
+    </style>
+</body>
+</html>
